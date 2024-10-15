@@ -45,7 +45,7 @@ def refine_transcript(transcript, api_key):
 # Streamlit UI
 def main():
     st.title("YouTube Video Transcript Analyzer")
-    st.write("Enter a YouTube URL to analyze its transcript.")
+    st.write("Enter a YouTube URL to generate and analyze its transcript.")
     with st.form(key="analyze_form"):
     # Input for YouTube URL
         video_url = st.text_input("Enter the YouTube video URL:")
