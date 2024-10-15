@@ -1,0 +1,7 @@
+streamlit
+youtube_dl
+SpeechRecognition
+pydub
+yt_dlp
+youtube-transcript-api
+google-generativeai
