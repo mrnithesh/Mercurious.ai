@@ -46,9 +46,10 @@ def refine_transcript(transcript, api_key):
 def main():
     st.title("YouTube Video Transcript Analyzer")
     st.write("Enter a YouTube URL to analyze its transcript.")
-
+    with st.form(key="analyze_form"):
     # Input for YouTube URL
-    video_url = st.text_input("Enter the YouTube video URL:")
+        video_url = st.text_input("Enter the YouTube video URL:")
+        submit_button = st.form_submit_button("Analyze Video")
 
     # Fetch API key from environment variable
     api_key = os.getenv("GEMINI_API_KEY")
@@ -56,7 +57,7 @@ def main():
         st.error("Google API key not found in environment variables. Please set the GEMINI_API_KEY environment variable.")
         return
 
-    if st.button("Analyze Video"):
+    if submit_button:
         if video_url:
             video_id = extract_video_id(video_url)
             if video_id:
