@@ -5,3 +5,7 @@ pydub
 yt_dlp
 youtube-transcript-api
 google-generativeai
+pytube
+langdetect
+python-dotenv
+python-multipart

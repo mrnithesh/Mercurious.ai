@@ -1,2 +1,4 @@
 /venv
 Diagrams/
+__pycache__/
+*.pyc
