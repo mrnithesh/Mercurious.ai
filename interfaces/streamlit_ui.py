@@ -76,26 +76,61 @@ class StreamlitInterface:
             col1, col2 = st.columns([2, 1])
             
             with col1:
+                # Display the video title and metadata
                 st.title(video_data["info"]["title"])
+                st.write(f"**Author:** {video_data['info'].get('author', 'Unknown')}")
+                st.write(f"**Views:** {video_data['info'].get('views', 'N/A')}")
+                st.write(f"**Published on:** {video_data['info'].get('publish_date', 'Unknown')}")
+                
+                # Display the video player
                 st.video(f"https://youtube.com/watch?v={st.session_state.current_video}")
                 
-                self.video_handler.create_player_controls(video_data["info"])
-                
+                # Display the video description inside an expander
+                with st.expander("Description"):
+                    st.write(video_data["info"].get("description", "No description available"))
+
+                # Content tabs: Content, Summary, and Study Guide
                 tabs = st.tabs(["Content", "Summary", "Study Guide"])
                 with tabs[0]:
-                    st.write(video_data["content"]["sections"])
+                    st.subheader("Content")
+                    sections = video_data["content"].get("sections", [])
+                    
+                    if isinstance(sections, list) and all(isinstance(section, dict) for section in sections):
+                        # If sections is a list of dictionaries
+                        for section in sections:
+                            st.markdown(f"### {section.get('title', 'Untitled Section')}")
+                            st.markdown(f"**Summary:** {section.get('summary', 'No summary available')}")
+                            st.markdown(f"**Key Concepts:** {section.get('key_concepts', 'No key concepts available')}")
+                            st.markdown("---")  # Horizontal line to separate sections
+                    elif isinstance(sections, list):
+                        # If sections is a list of strings
+                        for section in sections:
+                            st.markdown(f"- {section}")
+                    else:
+                        st.write("No content available")
+                        
                 with tabs[1]:
-                    st.write(video_data["content"]["summary"])
+                    st.subheader("Summary")
+                    summary = video_data["content"].get("summary", "No summary available")
+                    st.markdown(summary)
+
                 with tabs[2]:
-                    st.write(video_data["content"]["study_guide"])
+                    st.subheader("Study Guide")
+                    study_guide = video_data["content"].get("study_guide", "No study guide available")
+                    st.markdown(study_guide)
             
             with col2:
+                # Display learning tools (Notes, Bookmarks, etc.)
                 self.video_handler.create_learning_tools()
-                
+
+                # AI Chat Assistant interface
                 st.subheader("AI Chat Assistant")
                 self._render_chat_interface()
+        
         else:
             st.warning("Please process a video first!")
+
+
 
     def render_quiz(self):
         """Render quiz interface."""

@@ -2,7 +2,9 @@ import streamlit as st
 from pytube import YouTube
 from typing import Dict, Optional
 import re
+import requests
 from utils.transcript import TranscriptProcessor
+import os
 
 class VideoHandler:
     def __init__(self):
@@ -15,21 +17,35 @@ class VideoHandler:
         return match.group(1) if match else None
 
     def fetch_video_info(self, video_url: str) -> Dict:
-        """Fetch video metadata from YouTube."""
+        """Fetch video metadata from YouTube using the YouTube Data API."""
+        video_id = self.extract_video_id(video_url)
+        if not video_id:
+            return {"error": "Invalid YouTube URL"}
+
+        api_key = os.getenv("YOUTUBE_DATA_API")  # Replace with your actual API key
+        url = f"https://www.googleapis.com/youtube/v3/videos?id={video_id}&key={api_key}&part=snippet,contentDetails,statistics"
+
         try:
-            yt = YouTube(video_url)
-            return {
-                "title": yt.title,
-                "author": yt.author,
-                "length": yt.length,
-                "views": yt.views,
-                "description": yt.description,
-                "thumbnail_url": yt.thumbnail_url,
-                "publish_date": yt.publish_date,
-                "qualities": [stream.resolution for stream in yt.streams.filter(progressive=True)]
-            }
-        except Exception as e:
-            st.error(f"Error fetching video information: {str(e)}")
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
+
+            if "items" in data and len(data["items"]) > 0:
+                video_data = data["items"][0]
+                return {
+                    "title": video_data["snippet"]["title"],
+                    "author": video_data["snippet"]["channelTitle"],
+                    "description": video_data["snippet"]["description"],
+                    "thumbnail_url": video_data["snippet"]["thumbnails"]["high"]["url"],
+                    "publish_date": video_data["snippet"]["publishedAt"],
+                    "views": video_data["statistics"].get("viewCount"),
+                    "length": video_data["contentDetails"]["duration"]
+                }
+            else:
+                st.error("No video data found using the YouTube Data API.")
+                return {}
+        except requests.exceptions.RequestException as e:
+            st.error(f"Error fetching video information with YouTube Data API: {e}")
             return {}
 
     def process_video(self, video_url: str) -> Dict:
@@ -55,19 +71,12 @@ class VideoHandler:
         }
 
     def create_player_controls(self, video_info: Dict):
-        """Create custom video player controls."""
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.selectbox("Quality", video_info.get('qualities', []))
-        
-        with col2:
-            st.select_slider("Playback Speed", 
-                           options=[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
-                           value=1)
-        
-        with col3:
-            st.checkbox("Autoplay", value=False)
+        """Create a simple player control with autoplay option."""
+        autoplay = st.checkbox("Autoplay", value=False)
+        if autoplay:
+            st.video(video_info.get("video_url") + "?autoplay=1")
+        else:
+            st.video(video_info.get("video_url"))
 
     def create_learning_tools(self):
         """Create learning tool interface."""
@@ -103,4 +112,4 @@ class VideoHandler:
         if "bookmarks" not in st.session_state:
             st.session_state.bookmarks = []
         # Add current time as bookmark
-        st.success("Bookmark added!") 
+        st.success("Bookmark added!")

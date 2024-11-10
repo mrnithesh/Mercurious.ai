@@ -2,3 +2,4 @@
 Diagrams/
 __pycache__/
 *.pyc
+.env
