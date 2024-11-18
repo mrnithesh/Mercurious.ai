@@ -99,7 +99,7 @@ class StreamlitInterface:
     def render_navigation(self):
         """Render enhanced navigation bar."""
         with st.sidebar:
-            st.image("logo.jpg", width=150) 
+            st.image("logo.jpg", width=150)  
             st.title("Mercurious.AI")
             
             nav_items = {
