@@ -20,12 +20,14 @@ st.set_page_config(
 )
 
 class StreamlitInterface:
-    def __init__(self):
+    def __init__(self, auth_manager, data_manager):
         self.video_handler = VideoHandler()
         self.quiz_generator = QuizGenerator()
         self.chat_engine = ChatEngine()
         self.avatar = Avatar()
         self.recommendation_engine = RecommendationEngine()
+        self.auth_manager = auth_manager
+        self.data_manager = data_manager
         self._initialize_session_state()
         self._load_custom_css()
 
@@ -160,23 +162,99 @@ class StreamlitInterface:
                         else:
                             st.error(f"❌ {result['error']}")
         
+        # Add section for previously processed videos
+        if st.session_state.user:
+            st.markdown("### 📚 Your Learning Library")
+            processed_videos = self.data_manager.get_all_processed_videos(st.session_state.user.uid)
+            
+            if processed_videos:
+                for video in processed_videos:
+                    with st.expander(f"🎥 {video['title']}", expanded=False):
+                        st.progress(video.get('progress', 0))
+                        st.markdown(f"Last watched: {video['last_watched'].strftime('%Y-%m-%d %H:%M')}")
+                        
+                        col1, col2, col3 = st.columns([1, 1, 1])
+                        with col1:
+                            if st.button("▶️ Continue Learning", key=f"continue_{video['video_id']}"):
+                                st.session_state.current_video = video['video_id']
+                                st.session_state.processed_videos[video['video_id']] = {
+                                    'info': video['info'],
+                                    'video_id': video['video_id'],
+                                    'content': video['content']
+                                }
+                                st.session_state.current_page = "learn"
+                                st.rerun()
+                        with col2:
+                            if st.button("📊 View Progress", key=f"progress_{video['video_id']}"):
+                                st.session_state.current_page = "progress"
+                                st.rerun()
+                        with col3:
+                            if st.button("🗑️ Delete", 
+                                key=f"delete_{video['video_id']}", 
+                                type="secondary",
+                                help="Delete this video from your library"
+                            ):
+                                if self._delete_video(video['video_id']):
+                                    # Remove from session state if exists
+                                    if video['video_id'] in st.session_state.processed_videos:
+                                        del st.session_state.processed_videos[video['video_id']]
+                                    if hasattr(st.session_state, 'current_video') and st.session_state.current_video == video['video_id']:
+                                        delattr(st.session_state, 'current_video')
+                                    st.success("Video deleted successfully!")
+                                    st.rerun()
+                                else:
+                                    st.error("Failed to delete video")
+            else:
+                st.info("No processed videos yet. Start by processing a video! 🎥")
+    
         with col2:
             st.markdown("### Recent Learning Activity")
-            if st.session_state.processed_videos:
-                for video_id, video_data in list(st.session_state.processed_videos.items())[-3:]:
-                    with st.container():
-                        st.markdown(f"""
-                            🎥 **{video_data['info']['title'][:50]}...**  
-                            👤 {video_data['info'].get('author', 'Unknown')}
-                        """)
-                        st.progress(0.7)  # Replace with actual progress
+            if st.session_state.user:
+                recent_activity = self.data_manager.get_user_progress(st.session_state.user.uid)
+                
+                if recent_activity and recent_activity['videos']:
+                    for video in recent_activity['videos'][:3]:  # Show last 3 videos
+                        with st.container():
+                            st.markdown(f"""
+                                🎥 **{video['title'][:50]}...**  
+                                📅 Last watched: {video['last_watched'].strftime('%Y-%m-%d %H:%M')}
+                            """)
+                            st.progress(video.get('progress', 0))
+                            
+                            # Add quick access button
+                            if st.button("▶️ Resume", key=f"resume_{video['video_id']}"):
+                                st.session_state.current_video = video['video_id']
+                                st.session_state.processed_videos[video['video_id']] = {
+                                    'info': video['info'],
+                                    'video_id': video['video_id'],
+                                    'content': video['content']
+                                }
+                                st.session_state.current_page = "learn"
+                                st.rerun()
+                else:
+                    st.info("No recent activity. Start by processing a video! 🎥")
             else:
-                st.info("No recent activity. Start by processing a video! 🎥")
+                st.warning("Please login to see your learning activity")
 
     def render_learn(self):
         """Render enhanced learning interface."""
         if hasattr(st.session_state, 'current_video'):
             video_data = st.session_state.processed_videos[st.session_state.current_video]
+            
+            # Save processed video data for the current user
+            if st.session_state.user:
+                self.data_manager.save_processed_video(
+                    st.session_state.user.uid,
+                    video_data
+                )
+                
+                # Update progress based on video position
+                progress = st.session_state.get('video_progress', 0)
+                self.data_manager.update_video_progress(
+                    st.session_state.user.uid,
+                    st.session_state.current_video,
+                    progress
+                )
             
             col1, col2 = st.columns([2, 1])
             
@@ -215,25 +293,35 @@ class StreamlitInterface:
                 with st.container():
                     st.subheader("📝 Learning Tools")
                     
+                    # Load existing notes if available
+                    existing_notes = ""
+                    if st.session_state.user:
+                        existing_notes = self.data_manager.get_notes(
+                            st.session_state.user.uid,
+                            st.session_state.current_video
+                        ) or ""
+                    
                     with st.expander("✏️ Notes", expanded=True):
-                        notes = st.text_area("", placeholder="Take notes here...", height=150)
+                        notes = st.text_area(
+                            "Your Notes",
+                            value=existing_notes,
+                            placeholder="Take notes here...",
+                            height=300
+                        )
+                        
                         col1, col2 = st.columns([1, 1])
                         with col1:
                             if st.button("💾 Save Notes", use_container_width=True):
-                                self._save_notes(notes)
+                                if self._save_notes(notes):
+                                    st.success("✅ Notes saved!")
+                                else:
+                                    st.error("Failed to save notes")
                         with col2:
                             if st.button("📋 Copy", use_container_width=True):
-                                st.write("Notes copied to clipboard!")
+                                st.code(notes)  # This adds a copy button automatically
+                                st.success("Notes ready to copy!")
                     
-                    with st.expander("⏱️ Timestamps", expanded=True):
-                        timestamp = st.text_input("", placeholder="MM:SS Description")
-                        if st.button("➕ Add Timestamp", use_container_width=True):
-                            self._add_timestamp(timestamp)
-                        
-                        if "timestamps" in st.session_state:
-                            for ts in st.session_state.timestamps:
-                                st.markdown(f"- {ts}")
-                
+                    
                 st.markdown("---")
                 
                 with st.container():
@@ -318,31 +406,50 @@ class StreamlitInterface:
         """Render enhanced progress tracking interface."""
         st.title("📊 Learning Progress")
         
-        if st.session_state.learning_progress:
+        if not st.session_state.user:
+            st.warning("Please login to view your progress")
+            return
+        
+        # Get user progress data
+        progress_data = self.data_manager.get_user_progress(st.session_state.user.uid)
+        
+        if progress_data:
             col1, col2 = st.columns(2)
             
             with col1:
                 st.subheader("Overall Progress")
-                overall_progress = sum(st.session_state.learning_progress.values()) / len(st.session_state.learning_progress)
-                st.progress(overall_progress)
-                st.metric("Complete", f"{overall_progress:.1%}")
+                st.metric("Videos Watched", progress_data['total_videos'])
+                if progress_data['total_videos'] > 0:
+                    st.progress(progress_data['average_progress'])
+                    st.metric("Average Progress", f"{progress_data['average_progress']:.1%}")
             
             with col2:
-                st.subheader("Time Spent Learning")
-                total_hours = len(st.session_state.processed_videos) * 0.5
-                st.metric("Total Hours", f"{total_hours:.1f}")
+                st.subheader("Quiz Performance")
+                st.metric("Quizzes Completed", progress_data['total_quizzes'])
+                if progress_data['total_quizzes'] > 0:
+                    st.metric("Average Score", f"{progress_data['average_score']:.1%}")
             
+            # Show recent activity
             st.markdown("---")
-            st.subheader("Topic Progress")
+            st.subheader("Recent Activity")
             
-            for topic, progress in st.session_state.learning_progress.items():
-                with st.container():
-                    col1, col2 = st.columns([3, 1])
-                    with col1:
-                        st.markdown(f"**{topic}**")
-                        st.progress(progress)
-                    with col2:
-                        st.metric("Progress", f"{progress:.1%}")
+            for video in progress_data['videos'][:5]:  # Show last 5 videos
+                with st.expander(f"🎥 {video['title']}", expanded=False):
+                    st.progress(video['progress'])
+                    st.markdown(f"Last watched: {video['last_watched'].strftime('%Y-%m-%d %H:%M')}")
+                    
+                    # Show associated quiz results
+                    quiz_results = [
+                        q for q in progress_data['quiz_results'] 
+                        if q['video_id'] == video['video_id']
+                    ]
+                    if quiz_results:
+                        st.markdown("Quiz Results:")
+                        for quiz in quiz_results:
+                            st.metric(
+                                "Score", 
+                                f"{quiz['score']}/{quiz['total_questions']}"
+                            )
         else:
             st.info("📚 No learning progress recorded yet. Start by watching some videos!")
 
@@ -366,6 +473,30 @@ class StreamlitInterface:
                 st.selectbox("🌍 Language",
                             ["English", "Spanish", "French"],
                             key="language")
+
+    def render_login(self):
+        st.title("Welcome to Mercurious.ai")
+        
+        tab1, tab2 = st.tabs(["Login", "Register"])
+        
+        with tab1:
+            email = st.text_input("Email")
+            password = st.text_input("Password", type="password")
+            if st.button("Login"):
+                if self.auth_manager.login_user(email, password):
+                    st.success("Login successful!")
+                    st.rerun()
+                else:
+                    st.error("Invalid credentials")
+        
+        with tab2:
+            reg_email = st.text_input("Email", key="reg_email")
+            reg_password = st.text_input("Password", type="password", key="reg_pass")
+            name = st.text_input("Full Name")
+            if st.button("Register"):
+                if self.auth_manager.register_user(reg_email, reg_password, name):
+                    st.success("Registration successful! Please login.")
+
     def run(self):
         """Run the main application."""
         try:
@@ -394,3 +525,31 @@ class StreamlitInterface:
         except Exception as e:
             st.error(f"An error occurred: {str(e)}")
             st.write("Please try refreshing the page or contact support if the issue persists.")
+
+    def _save_notes(self, notes: str) -> bool:
+        """Save notes with DataManager."""
+        if "current_video" in st.session_state and st.session_state.user:
+            try:
+                success = self.data_manager.save_notes(
+                    st.session_state.user.uid,
+                    st.session_state.current_video,
+                    notes
+                )
+                return success
+            except Exception as e:
+                print(f"Error saving notes: {str(e)}")
+                return False
+        return False
+
+    def _delete_video(self, video_id: str) -> bool:
+        """Delete a video from user's library."""
+        if st.session_state.user:
+            try:
+                return self.data_manager.delete_video(
+                    st.session_state.user.uid,
+                    video_id
+                )
+            except Exception as e:
+                print(f"Error deleting video: {str(e)}")
+                return False
+        return False

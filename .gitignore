@@ -3,3 +3,4 @@ Diagrams/
 __pycache__/
 *.pyc
 .env
+firebase-credentials.json

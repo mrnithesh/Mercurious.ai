@@ -47,6 +47,7 @@ FIREBASE_CONFIG = {
     "auth_domain": os.getenv("FIREBASE_AUTH_DOMAIN"),
     "project_id": os.getenv("FIREBASE_PROJECT_ID"),
     "storage_bucket": os.getenv("FIREBASE_STORAGE_BUCKET"),
+    "database_url": f'https://{os.getenv("FIREBASE_PROJECT_ID")}.firebaseio.com',
     "credentials_path": ROOT_DIR / "config" / "firebase-credentials.json"
 }
 
