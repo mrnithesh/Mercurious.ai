@@ -104,6 +104,10 @@ class StreamlitInterface:
             st.image("logo.jpg", width=150)  
             st.title("Mercurious.AI")
             
+            # Show user info if logged in
+            if st.session_state.user:
+                st.markdown(f"👤 **{st.session_state.user.display_name}**")
+            
             nav_items = {
                 "home": "🏠 Home",
                 "learn": "📚 Learn",
@@ -124,6 +128,16 @@ class StreamlitInterface:
             with st.expander("🌟 Quick Stats", expanded=True):
                 st.metric(label="Videos Watched", value=len(st.session_state.processed_videos))
                 st.metric(label="Hours Learned", value=f"{len(st.session_state.processed_videos) * 0.5:.1f}")
+            
+            # Add logout button at the bottom
+            st.markdown("---")
+            if st.session_state.user:
+                if st.button("🚪 Logout", type="secondary", use_container_width=True):
+                    self.auth_manager.logout_user()
+                    # Clear session state
+                    for key in list(st.session_state.keys()):
+                        del st.session_state[key]
+                    st.rerun()
 
     def render_home(self):
         """Render enhanced home page."""
@@ -161,9 +175,10 @@ class StreamlitInterface:
                             st.rerun()
                         else:
                             st.error(f"❌ {result['error']}")
-        
-        # Add section for previously processed videos
+
+        # Learning Library Section
         if st.session_state.user:
+            st.markdown("---")
             st.markdown("### 📚 Your Learning Library")
             processed_videos = self.data_manager.get_all_processed_videos(st.session_state.user.uid)
             
@@ -195,7 +210,6 @@ class StreamlitInterface:
                                 help="Delete this video from your library"
                             ):
                                 if self._delete_video(video['video_id']):
-                                    # Remove from session state if exists
                                     if video['video_id'] in st.session_state.processed_videos:
                                         del st.session_state.processed_videos[video['video_id']]
                                     if hasattr(st.session_state, 'current_video') and st.session_state.current_video == video['video_id']:
@@ -206,35 +220,6 @@ class StreamlitInterface:
                                     st.error("Failed to delete video")
             else:
                 st.info("No processed videos yet. Start by processing a video! 🎥")
-    
-        with col2:
-            st.markdown("### Recent Learning Activity")
-            if st.session_state.user:
-                recent_activity = self.data_manager.get_user_progress(st.session_state.user.uid)
-                
-                if recent_activity and recent_activity['videos']:
-                    for video in recent_activity['videos'][:3]:  # Show last 3 videos
-                        with st.container():
-                            st.markdown(f"""
-                                🎥 **{video['title'][:50]}...**  
-                                📅 Last watched: {video['last_watched'].strftime('%Y-%m-%d %H:%M')}
-                            """)
-                            st.progress(video.get('progress', 0))
-                            
-                            # Add quick access button
-                            if st.button("▶️ Resume", key=f"resume_{video['video_id']}"):
-                                st.session_state.current_video = video['video_id']
-                                st.session_state.processed_videos[video['video_id']] = {
-                                    'info': video['info'],
-                                    'video_id': video['video_id'],
-                                    'content': video['content']
-                                }
-                                st.session_state.current_page = "learn"
-                                st.rerun()
-                else:
-                    st.info("No recent activity. Start by processing a video! 🎥")
-            else:
-                st.warning("Please login to see your learning activity")
 
     def render_learn(self):
         """Render enhanced learning interface."""

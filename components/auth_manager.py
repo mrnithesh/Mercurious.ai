@@ -65,8 +65,21 @@ class AuthManager:
 
     def logout_user(self):
         """Logout the current user."""
-        st.session_state.authentication_status = False
-        st.session_state.user = None
+        try:
+            # Clear authentication status
+            st.session_state.authentication_status = False
+            st.session_state.user = None
+            
+            # Clear any other user-specific session data
+            if 'current_video' in st.session_state:
+                del st.session_state.current_video
+            if 'processed_videos' in st.session_state:
+                del st.session_state.processed_videos
+            
+            return True
+        except Exception as e:
+            print(f"Error during logout: {str(e)}")
+            return False
 
     def get_current_user(self) -> Optional[Dict[str, Any]]:
         """Get the current user's data."""
