@@ -24,12 +24,13 @@ class StreamlitInterface:
         self.video_handler = VideoHandler()
         self.quiz_generator = QuizGenerator()
         self.chat_engine = ChatEngine()
-        self.avatar = Avatar()
         self.recommendation_engine = RecommendationEngine()
         self.auth_manager = auth_manager
         self.data_manager = data_manager
+        self.avatar = None
         self._initialize_session_state()
         self._load_custom_css()
+        self._apply_theme()
 
     def _initialize_session_state(self):
         """Initialize session state variables."""
@@ -39,64 +40,199 @@ class StreamlitInterface:
             "learning_progress": {},
             "processed_videos": {},
             "theme": "light",
-            "sidebar_collapsed": False
+            "language": "English",
+            "settings_changed": False
         }
         
-        for key, default_value in default_states.items():
+        for key, value in default_states.items():
             if key not in st.session_state:
-                st.session_state[key] = default_value
+                st.session_state[key] = value
 
     def _load_custom_css(self):
         """Load custom CSS for better styling."""
         st.markdown("""
             <style>
+                /* Global Styles */
+                .main .block-container {
+                    padding: 2rem 3rem;
+                    max-width: 1200px;
+                    margin: 0 auto;
+                }
+
+                /* Card-like containers */
+                .stMarkdown div {
+                    border-radius: 10px;
+                    padding: 1rem;
+                    margin-bottom: 1rem;
+                }
+
+                /* Buttons */
                 .stButton button {
                     width: 100%;
-                    border-radius: 5px;
-                    height: 3em;
-                    background-color: #f0f2f6;
+                    border-radius: 8px;
+                    padding: 0.5rem 1rem;
+                    font-weight: 500;
+                    transition: all 0.3s ease;
                     border: none;
-                    margin: 5px 0;
+                    background: linear-gradient(90deg, #FF4B4B 0%, #FF6B6B 100%);
+                    color: white;
                 }
-                
                 .stButton button:hover {
-                    background-color: #e0e2e6;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(255, 75, 75, 0.2);
                 }
-                
-                .nav-button-active {
-                    border-left: 4px solid #ff4b4b !important;
-                    font-weight: bold;
+
+                /* Input fields */
+                .stTextInput input, .stSelectbox select {
+                    border-radius: 8px;
+                    border: 2px solid #eee;
+                    padding: 0.5rem;
+                    transition: all 0.3s ease;
                 }
-                
-                .video-container {
+                .stTextInput input:focus, .stSelectbox select:focus {
+                    border-color: #FF4B4B;
+                    box-shadow: 0 0 0 2px rgba(255, 75, 75, 0.1);
+                }
+
+                /* Chat messages */
+                .stChatMessage {
+                    border-radius: 12px !important;
+                    padding: 1rem !important;
+                    margin: 0.5rem 0 !important;
+                    transition: transform 0.2s ease;
+                }
+                .stChatMessage:hover {
+                    transform: translateX(4px);
+                }
+                .stChatMessage [data-testid="stMarkdownContainer"] p {
+                    line-height: 1.6;
+                }
+
+                /* Sidebar */
+                [data-testid="stSidebar"] {
+                    background: linear-gradient(180deg, rgba(255,75,75,0.05) 0%, rgba(255,75,75,0) 100%);
+                    padding: 2rem 1rem;
+                }
+                [data-testid="stSidebar"] .stMarkdown {
+                    margin-bottom: 2rem;
+                }
+
+                /* Headers */
+                h1, h2, h3 {
+                    background: linear-gradient(90deg, #FF4B4B, #FF6B6B);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    margin-bottom: 1.5rem;
+                }
+
+                /* Progress bars */
+                .stProgress > div > div {
+                    background: linear-gradient(90deg, #FF4B4B 0%, #FF6B6B 100%);
                     border-radius: 10px;
-                    overflow: hidden;
-                    margin: 20px 0;
                 }
-                
-                .chat-message {
-                    padding: 15px;
+
+                /* Alerts */
+                .stAlert {
                     border-radius: 10px;
-                    margin: 10px 0;
+                    border: none;
                 }
-                
-                .user-message {
-                    background-color: #f0f2f6;
+
+                /* Dark mode specific styles */
+                [data-testid="stAppViewContainer"].dark {
+                    background: linear-gradient(180deg, #1E1E1E 0%, #2D2D2D 100%);
                 }
-                
-                .assistant-message {
-                    background-color: #e8f0fe;
+                .dark .stChatMessage {
+                    background: rgba(255, 255, 255, 0.05) !important;
+                    backdrop-filter: blur(10px);
                 }
-                
-                .progress-card {
-                    padding: 20px;
-                    border-radius: 10px;
-                    background-color: white;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    margin: 10px 0;
+                .dark .stButton button {
+                    background: linear-gradient(90deg, #FF4B4B 0%, #FF6B6B 100%);
                 }
             </style>
         """, unsafe_allow_html=True)
+
+    def _initialize_avatar(self):
+        """Initialize avatar after user authentication"""
+        if not self.avatar:
+            if not st.session_state.user:
+                st.error("Failed to initialize avatar: User not authenticated")
+                st.stop()
+            
+            user_data = self.auth_manager.get_current_user()
+            if not user_data:
+                st.error("Failed to load user data")
+                st.stop()
+                
+            self.avatar = Avatar(
+                user_id=st.session_state.user.uid,
+                db=self.data_manager.db
+            )
+
+    def _apply_theme(self):
+        """Apply the current theme."""
+        if st.session_state.theme == "dark":
+            # Dark theme configuration
+            st.markdown("""
+                <style>
+                    [data-testid="stAppViewContainer"] {
+                        background-color: #1E1E1E;
+                    }
+                    [data-testid="stSidebar"] {
+                        background-color: #2D2D2D;
+                    }
+                    .stMarkdown, .stText, p, h1, h2, h3 {
+                        color: #FFFFFF !important;
+                    }
+                    .stButton > button {
+                        background-color: #4A4A4A;
+                        color: #FFFFFF;
+                    }
+                    .stTextInput > div > div > input {
+                        background-color: #2D2D2D;
+                        color: #FFFFFF;
+                    }
+                    .stSelectbox > div > div > select {
+                        background-color: #2D2D2D;
+                        color: #FFFFFF;
+                    }
+                    div[data-baseweb="select"] > div {
+                        background-color: #2D2D2D;
+                        color: #FFFFFF;
+                    }
+                    .stChatMessage {
+                        background-color: #2D2D2D !important;
+                    }
+                    .stChatMessage [data-testid="stMarkdownContainer"] {
+                        color: #FFFFFF !important;
+                    }
+                    div[data-testid="stChatMessageContent"] {
+                        background-color: #2D2D2D !important;
+                        color: #FFFFFF !important;
+                    }
+                    div[data-testid="stChatMessageContent"] code {
+                        background-color: #1E1E1E !important;
+                    }
+                    .stAlert {
+                        background-color: #2D2D2D;
+                        color: #FFFFFF;
+                    }
+                    .stSpinner > div {
+                        border-color: #FFFFFF !important;
+                    }
+                </style>
+            """, unsafe_allow_html=True)
+        else:
+            # Light theme configuration (default Streamlit theme)
+            st.markdown("""
+                <style>
+                    .stChatMessage {
+                        background-color: #F0F2F6 !important;
+                    }
+                    div[data-testid="stChatMessageContent"] {
+                        background-color: #F0F2F6 !important;
+                    }
+                </style>
+            """, unsafe_allow_html=True)
 
     def render_navigation(self):
         """Render enhanced navigation bar."""
@@ -357,8 +493,21 @@ class StreamlitInterface:
             
             if "current_quiz" not in st.session_state:
                 with st.spinner("Generating quiz..."):
+                    full_content = f"""
+                    Video Title: {video_data.get('title', '')}
+                    
+                    Transcript:
+                    {video_data.get('content', {}).get('transcript', '')}
+                    
+                    Summary:
+                    {video_data.get('content', {}).get('summary', '')}
+                    
+                    Key Points:
+                    {video_data.get('content', {}).get('key_points', [])}
+                    """
                     st.session_state.current_quiz = self.quiz_generator.generate_quiz(
-                        video_data["content"]["summary"]
+                        content=full_content,
+                        num_questions=5
                     )
             
             for i, question in enumerate(st.session_state.current_quiz):
@@ -442,22 +591,49 @@ class StreamlitInterface:
         """Render enhanced settings interface."""
         st.title("⚙️ Settings")
         
+        # Store current values before form
+        current_theme = st.session_state.theme
+        current_language = st.session_state.get("language", "English")
+        
         with st.form("settings_form"):
             col1, col2 = st.columns(2)
             
             with col1:
-                st.text_input("👤 Username", 
+                username = st.text_input("👤 Username", 
                              value=st.session_state.user_data.get("username", ""),
-                             key="username")
-                st.selectbox("🎨 Theme",
+                             key="settings_username")
+                new_theme = st.selectbox("🎨 Theme",
                             ["Light", "Dark"],
-                            index=0 if st.session_state.theme == "light" else 1,
-                            key="theme")
+                            index=0 if current_theme == "light" else 1,
+                            key="settings_theme")
             
             with col2:
-                st.selectbox("🌍 Language",
+                new_language = st.selectbox("🌍 Language",
                             ["English", "Spanish", "French"],
-                            key="language")
+                            index=["English", "Spanish", "French"].index(current_language),
+                            key="settings_language")
+            
+            # Add submit button
+            if st.form_submit_button("Save Settings"):
+                try:
+                    # Update user settings in database
+                    user_id = st.session_state.user.uid
+                    settings = {
+                        "username": username,
+                        "theme": new_theme.lower(),
+                        "language": new_language
+                    }
+                    
+                    if self.data_manager.update_user_settings(user_id, settings):
+                        # Set flag to update theme on next rerun
+                        st.session_state.settings_changed = True
+                        st.session_state.new_settings = settings
+                        st.success("✅ Settings saved successfully!")
+                        st.rerun()
+                    else:
+                        st.error("Failed to save settings to database")
+                except Exception as e:
+                    st.error(f"Failed to save settings: {str(e)}")
 
     def render_login(self):
         st.title("Welcome to Mercurious.ai")
@@ -484,6 +660,20 @@ class StreamlitInterface:
 
     def run(self):
         """Run the main application."""
+        # Handle settings changes at the start of the run
+        if st.session_state.get("settings_changed", False):
+            new_settings = st.session_state.get("new_settings", {})
+            st.session_state.theme = new_settings.get("theme", st.session_state.theme)
+            st.session_state.language = new_settings.get("language", st.session_state.language)
+            st.session_state.user_data["username"] = new_settings.get("username", 
+                st.session_state.user_data.get("username", ""))
+            st.session_state.settings_changed = False
+            del st.session_state.new_settings
+        
+        # Apply theme before rendering anything
+        self._apply_theme()
+        
+        self._initialize_avatar()  # Initialize avatar when running main interface
         try:
             self.render_navigation()
 

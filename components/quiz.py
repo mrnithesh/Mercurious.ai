@@ -16,6 +16,14 @@ class QuizGenerator:
         return f"""Generate {num_questions} multiple choice questions based on this content:
         {content[:2000]}...
 
+        Follow these guidelines:
+        1. Questions should directly test understanding of the video content
+        2. Each question should focus on a specific concept or point from the video
+        3. Include questions that test different levels of understanding (recall, comprehension, application)
+        4. Make sure all options are plausible but only one is clearly correct
+        5. Avoid overly general or vague questions
+        6. Base questions on the actual content, not assumptions or external knowledge
+
         Format each question as:
         Question: [question text]
         A) [option]
@@ -24,7 +32,11 @@ class QuizGenerator:
         D) [option]
         Correct: [A/B/C/D]
 
-        Make sure questions test understanding rather than just recall."""
+        Make sure each question:
+        - Is clear and unambiguous
+        - Has exactly one correct answer
+        - Tests understanding of the video content
+        - Is relevant to the main points discussed"""
 
     def _parse_quiz_response(self, response: str) -> List[Dict]:
         questions = []
