@@ -3,51 +3,43 @@ from typing import Dict, Any
 from components.video import VideoHandler
 from components.quiz import QuizGenerator
 from components.chat import Chat
-from components.avatar import Avatar
-from utils.recommendations import RecommendationEngine
-import time
+from components.data_manager import DataManager
 import os
-
-# Set page config at the very beginning, before any other st commands
-st.set_page_config(
-    page_title="Mercurious.ai",
-    layout="wide",
-    initial_sidebar_state="expanded",
-    menu_items={
-        'Get Help': 'https://docs.streamlit.io',
-        'Report a bug': "https://github.com/your-repo/issues",
-        'About': "# AI Learning Assistant v1.0"
-    }
-)
+import time
+import datetime
 
 class StreamlitInterface:
     def __init__(self, auth_manager, data_manager):
         self.video_handler = VideoHandler()
         self.quiz_generator = QuizGenerator()
         self.chat = Chat(api_key=os.getenv('GEMINI_API_KEY'))
-        self.recommendation_engine = RecommendationEngine()
         self.auth_manager = auth_manager
         self.data_manager = data_manager
-        self.avatar = None
         self._initialize_session_state()
         self._load_custom_css()
         self._apply_theme()
 
     def _initialize_session_state(self):
         """Initialize session state variables."""
-        default_states = {
-            "current_page": "home",
-            "user_data": {},
-            "learning_progress": {},
-            "processed_videos": {},
-            "theme": "light",
-            "language": "English",
-            "settings_changed": False
-        }
-        
-        for key, value in default_states.items():
-            if key not in st.session_state:
-                st.session_state[key] = value
+        if 'authenticated' not in st.session_state:
+            st.session_state.authenticated = False
+        if 'current_page' not in st.session_state:
+            st.session_state.current_page = 'home'
+        if 'theme' not in st.session_state:
+            st.session_state.theme = 'light'
+        if 'user_data' not in st.session_state:
+            st.session_state.user_data = {}
+        if 'processed_videos' not in st.session_state:
+            st.session_state.processed_videos = {}
+        if 'current_video' not in st.session_state:
+            st.session_state.current_video = None
+        if 'quiz_state' not in st.session_state:
+            st.session_state.quiz_state = {
+                "current_question": 0,
+                "total_questions": 0,
+                "current_score": 0,
+                "user_answers": {}
+            }
 
     def _load_custom_css(self):
         """Load custom CSS for better styling."""
@@ -535,85 +527,171 @@ class StreamlitInterface:
                 st.rerun()
 
     def _render_chat_interface(self):
-        """Render enhanced chat interface."""
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
+        """Render the chat interface."""
+        if not st.session_state.user:
+            st.warning("Please login to use the chat feature")
+            return
 
-        chat_container = st.container()
-        
-        with chat_container:
-            for message in st.session_state.messages:
-                message_style = "user-message" if message["role"] == "user" else "assistant-message"
-                with st.chat_message(message["role"]):
-                    st.markdown(f'<div class="chat-message {message_style}">{message["content"]}</div>', 
-                              unsafe_allow_html=True)
+        if "current_video" not in st.session_state or not st.session_state.current_video:
+            st.warning("⚠️ Please select a video to chat about")
+            return
 
-        if prompt := st.chat_input("Ask about the video..."):
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            
-            with st.chat_message("user"):
-                st.markdown(f'<div class="chat-message user-message">{prompt}</div>', 
-                          unsafe_allow_html=True)
+        # Get the current video data
+        video_data = st.session_state.processed_videos.get(st.session_state.current_video)
+        if not video_data or not video_data.get('content'):
+            st.warning("⚠️ Video content not available. Please process the video first.")
+            return
 
-            with st.chat_message("assistant"):
-                with st.spinner("Thinking..."):
-                    response = self.chat.process_message(prompt, context=st.session_state.messages)
-                    st.markdown(f'<div class="chat-message assistant-message">{response}</div>', 
-                              unsafe_allow_html=True)
-                
-            st.session_state.messages.append({"role": "assistant", "content": response})
+        # Display chat interface
+        self.chat.display_chat_interface()
 
     def render_quiz(self):
         """Render enhanced quiz interface."""
-        st.title("✍️ Knowledge Check")
+        if not st.session_state.user:
+            st.warning("Please login to use the quiz feature")
+            return
+
+        if "current_video" not in st.session_state or not st.session_state.current_video:
+            st.warning("⚠️ Please select a video first")
+            return
+
+        # Get video content from processed videos
+        video_data = st.session_state.processed_videos.get(st.session_state.current_video)
+        if not video_data:
+            st.warning("⚠️ Video data not found. Please process the video first.")
+            return
+
+        video_content = video_data.get('content', {})
+        if not video_content:
+            st.warning("⚠️ No content available. Please process the video first.")
+            return
         
-        if hasattr(st.session_state, 'current_video'):
-            video_data = st.session_state.processed_videos[st.session_state.current_video]
+        # Extract content for quiz generation
+        content = {
+            'transcript': video_content.get('transcript', ''),
+            'summary': video_content.get('summary', ''),
+            'main_points': video_content.get('main_points', []),
+            'key_concepts': video_content.get('key_concepts', []),
+            'study_guide': video_content.get('study_guide', '')
+        }
+        
+        # Check if we have enough content
+        if not content['transcript'] and not content['summary']:
+            st.warning("⚠️ No content available for quiz generation. Please process the video first.")
+            return
+
+        # Initialize quiz state if not exists
+        if "quiz_state" not in st.session_state:
+            st.session_state.quiz_state = {
+                "current_score": 0,
+                "total_questions": 0,
+                "submitted": False,
+                "user_answers": {}
+            }
+
+        try:
+            # Generate quiz data if not already generated
+            if "quiz_data" not in st.session_state:
+                quiz_generator = QuizGenerator()
+                quiz_data = quiz_generator.generate_quiz(content)
+                if quiz_data:
+                    st.session_state.quiz_data = quiz_data
+                    st.session_state.quiz_state["total_questions"] = len(quiz_data)
+                else:
+                    st.error("Failed to generate quiz questions")
+                    return
             
-            if "current_quiz" not in st.session_state:
-                with st.spinner("Generating quiz..."):
-                    full_content = f"""
-                    Video Title: {video_data.get('title', '')}
-                    
-                    Transcript:
-                    {video_data.get('content', {}).get('transcript', '')}
-                    
-                    Summary:
-                    {video_data.get('content', {}).get('summary', '')}
-                    
-                    Key Points:
-                    {video_data.get('content', {}).get('key_points', [])}
-                    """
-                    st.session_state.current_quiz = self.quiz_generator.generate_quiz(
-                        content=full_content,
-                        num_questions=5
-                    )
+            # Display quiz header
+            st.markdown("### 📝 Video Quiz")
+            st.markdown("Test your understanding of the video content:")
             
-            for i, question in enumerate(st.session_state.current_quiz):
-                with st.container():
-                    st.markdown(f"### Question {i+1}")
-                    st.markdown(question["question"])
-                    
-                    answer = st.radio(
-                        "Select your answer:",
-                        question["options"],
-                        key=f"q{i}"
-                    )
-                    
-                    check_col, next_col = st.columns([1, 4])
-                    with check_col:
-                        if st.button(f"Check Answer", key=f"check_{i}"):
-                            if self.quiz_generator.grade_answer(question, answer):
-                                st.success("✅ Correct!")
-                            else:
-                                st.error(f"❌ Incorrect. The correct answer was: {question['correct']}")
-                    
-                    st.markdown("---")
-        else:
-            st.warning("⚠️ Please process a video first!")
-            if st.button("↩️ Go to Home"):
-                st.session_state.current_page = "home"
+            # Display questions
+            for i, question in enumerate(st.session_state.quiz_data):
+                self._render_quiz_question(i, question)
+
+            # Submit and Reset buttons in columns
+            col1, col2 = st.columns([1, 4])
+            with col1:
+                if st.button("Submit Quiz", key="submit_quiz", use_container_width=True):
+                    self._process_quiz_submission(st.session_state.quiz_data)
+                    st.session_state.quiz_state["submitted"] = True
+                    st.rerun()
+
+            with col2:
+                if st.button("Reset Quiz", key="reset_quiz"):
+                    # Clear quiz state and data
+                    st.session_state.pop("quiz_data", None)
+                    st.session_state.quiz_state = {
+                        "current_score": 0,
+                        "total_questions": 0,
+                        "submitted": False,
+                        "user_answers": {}
+                    }
+                    st.rerun()
+
+            # Display results if quiz is submitted
+            if st.session_state.quiz_state.get("submitted", False):
+                self._display_quiz_results()
+
+        except Exception as e:
+            st.error(f"Error rendering quiz: {str(e)}")
+            if st.button("Try Again"):
+                st.session_state.pop("quiz_data", None)
                 st.rerun()
+
+    def _process_quiz_submission(self, quiz_data):
+        """Process quiz submission and calculate score."""
+        score = 0
+        total = len(quiz_data)
+        
+        # Calculate score
+        for i, question in enumerate(quiz_data):
+            user_answer = st.session_state.quiz_state["user_answers"].get(i)
+            if user_answer is not None and user_answer == question['correct_answer']:
+                score += 1
+        
+        # Update quiz state
+        st.session_state.quiz_state.update({
+            "current_score": score,
+            "total_questions": total,
+            "submitted": True
+        })
+        
+        # Save quiz result if user is logged in
+        if st.session_state.user and st.session_state.current_video:
+            self.data_manager.save_quiz_result(
+                st.session_state.user.uid,
+                st.session_state.current_video,
+                {
+                    'score': score,
+                    'total': total,
+                    'timestamp': datetime.datetime.now().isoformat()
+                }
+            )
+
+    def _render_quiz_question(self, index, question):
+        """Render a single quiz question with improved formatting."""
+        st.markdown(f"**Question {index + 1}:** {question['question']}")
+        
+        # Create unique key for radio button
+        radio_key = f"question_{index}"
+        
+        # Get user's previous answer if it exists
+        previous_answer = st.session_state.quiz_state["user_answers"].get(index)
+        
+        # Display options as radio buttons
+        selected_option = st.radio(
+            "Select your answer:",
+            options=question['options'],
+            key=radio_key,
+            index=None if previous_answer is None else question['options'].index(previous_answer)
+        )
+        
+        # Store user's answer in session state
+        if selected_option is not None:
+            st.session_state.quiz_state["user_answers"][index] = selected_option
+        
+        st.markdown("---")
 
     def render_progress(self):
         """Render enhanced progress tracking interface."""
@@ -715,6 +793,7 @@ class StreamlitInterface:
                     st.error(f"Failed to save settings: {str(e)}")
 
     def render_login(self):
+        """Render login/register interface."""
         st.title("Welcome to Mercurious.ai")
         
         tab1, tab2 = st.tabs(["Login", "Register"])
@@ -724,7 +803,9 @@ class StreamlitInterface:
             password = st.text_input("Password", type="password")
             if st.button("Login"):
                 if self.auth_manager.login_user(email, password):
+                    st.session_state.authenticated = True
                     st.success("Login successful!")
+                    time.sleep(1)  # Give time for success message
                     st.rerun()
                 else:
                     st.error("Invalid credentials")
@@ -738,57 +819,47 @@ class StreamlitInterface:
                     st.success("Registration successful! Please login.")
 
     def _initialize_avatar(self):
-        """Initialize avatar after user authentication"""
-        if not self.avatar:
-            if not hasattr(st.session_state, 'user') or not st.session_state.user:
-                return  # Skip avatar initialization if user is not authenticated
-            
-            try:
-                user_data = self.auth_manager.get_current_user()
-                if user_data:
-                    self.avatar = Avatar(
-                        user_id=st.session_state.user.uid,
-                        db=self.data_manager.db
-                    )
-            except Exception as e:
-                st.error(f"Failed to initialize avatar: {str(e)}")
+        """Initialize avatar settings."""
+        if "avatar_style" not in st.session_state:
+            st.session_state.avatar_style = "default"
+        if "avatar_color" not in st.session_state:
+            st.session_state.avatar_color = "#000000"
 
     def run(self):
         """Run the main application."""
-        # Handle settings changes at the start of the run
-        if st.session_state.get("settings_changed", False):
-            new_settings = st.session_state.get("new_settings", {})
-            st.session_state.theme = new_settings.get("theme", st.session_state.theme)
-            st.session_state.language = new_settings.get("language", st.session_state.language)
-            st.session_state.user_data["username"] = new_settings.get("username", 
-                st.session_state.user_data.get("username", ""))
-            st.session_state.settings_changed = False
-            del st.session_state.new_settings
-        
-        # Initialize avatar only if user is authenticated
-        if hasattr(st.session_state, 'user') and st.session_state.user:
+        try:
+            # Initialize basic settings
+            self._initialize_session_state()
             self._initialize_avatar()
+            
+            # Handle authentication
+            if not st.session_state.authenticated:
+                self.render_login()
+                return
 
-        # Apply theme before rendering anything
-        self._apply_theme()
-        
-        # Render navigation
-        self.render_navigation()
-
-        # Render current page
-        if not st.session_state.user:
-            self.render_login()
-        else:
-            if st.session_state.current_page == "home":
+            # Render navigation and content
+            self.render_navigation()
+            
+            # Get current page from session state
+            current_page = st.session_state.current_page
+            
+            # Render appropriate page
+            if current_page == "home":
                 self.render_home()
-            elif st.session_state.current_page == "learn":
+            elif current_page == "learn":
                 self.render_learn()
-            elif st.session_state.current_page == "quiz":
+            elif current_page == "quiz":
                 self.render_quiz()
-            elif st.session_state.current_page == "progress":
+            elif current_page == "progress":
                 self.render_progress()
-            elif st.session_state.current_page == "settings":
+            elif current_page == "settings":
                 self.render_settings()
+            else:
+                st.error("Invalid page selected")
+
+        except Exception as e:
+            st.error(f"An error occurred: {str(e)}")
+            st.error("Please try refreshing the page or contact support if the issue persists.")
 
     def _save_notes(self, notes: str) -> bool:
         """Save notes with DataManager."""
@@ -817,3 +888,339 @@ class StreamlitInterface:
                 print(f"Error deleting video: {str(e)}")
                 return False
         return False
+
+    def _generate_fallback_quiz(self, content):
+        """Generate a challenging quiz with complex questions from video content."""
+        try:
+            # Extract relevant content for quiz generation
+            quiz_content = {
+                'summary': content.get('summary', ''),
+                'main_points': content.get('main_points', []),
+                'key_concepts': content.get('key_concepts', []),
+                'study_guide': content.get('study_guide', '')
+            }
+            
+            # Generate quiz using QuizGenerator
+            quiz_data = self.quiz_generator.generate_quiz(quiz_content)
+            
+            # Validate quiz data
+            if not quiz_data or not isinstance(quiz_data, list):
+                raise ValueError("Invalid quiz data format")
+            
+            # Ensure each question has required fields
+            for question in quiz_data:
+                if not isinstance(question, dict):
+                    raise ValueError("Invalid question format")
+                if not all(key in question for key in ['question', 'options', 'correct_answer']):
+                    raise ValueError("Missing required question fields")
+            
+            return quiz_data
+            
+        except Exception as e:
+            st.error(f"Failed to generate quiz: {str(e)}")
+            # Return a simple default quiz
+            return [{
+                'question': 'What is the main topic of this video?',
+                'options': ['Option A', 'Option B', 'Option C', 'Option D'],
+                'correct_answer': 'Option A',
+                'explanation': 'This is a default question.'
+            }]
+
+    def _display_quiz_results(self):
+        """Display quiz results with explanations."""
+        score = st.session_state.quiz_state["current_score"]
+        total = st.session_state.quiz_state["total_questions"]
+        
+        # Display score
+        st.markdown(f"### Quiz Results")
+        st.markdown(f"Your score: **{score}/{total}** ({(score/total*100):.1f}%)")
+        
+        # Display each question with correct answer and explanation
+        st.markdown("### Review")
+        for i, question in enumerate(st.session_state.quiz_data):
+            user_answer = st.session_state.quiz_state["user_answers"].get(i)
+            correct = user_answer == question['correct_answer']
+            
+            # Question container
+            with st.container():
+                # Question text
+                st.markdown(f"**Question {i+1}:** {question['question']}")
+                
+                # User's answer with color-coded result
+                if user_answer:
+                    color = "green" if correct else "red"
+                    st.markdown(f"Your answer: <span style='color: {color}'>{user_answer}</span>", unsafe_allow_html=True)
+                else:
+                    st.markdown("Your answer: Not answered")
+                
+                # Correct answer if user was wrong
+                if not correct:
+                    st.markdown(f"Correct answer: **{question['correct_answer']}**")
+                
+                # Explanation
+                st.markdown(f"*Explanation: {question['explanation']}*")
+                
+                st.markdown("---")
+
+    def _render_quiz_question(self, index, question):
+        """Render a single quiz question with improved formatting."""
+        st.markdown(f"**Question {index + 1}:** {question['question']}")
+        
+        # Create unique key for radio button
+        radio_key = f"question_{index}"
+        
+        # Get user's previous answer if it exists
+        previous_answer = st.session_state.quiz_state["user_answers"].get(index)
+        
+        # Display options as radio buttons
+        selected_option = st.radio(
+            "Select your answer:",
+            options=question['options'],
+            key=radio_key,
+            index=None if previous_answer is None else question['options'].index(previous_answer)
+        )
+        
+        # Store user's answer in session state
+        if selected_option is not None:
+            st.session_state.quiz_state["user_answers"][index] = selected_option
+        
+        st.markdown("---")
+
+    def _render_fallback_quiz(self, content):
+        """Render a simple fallback quiz based on video content."""
+        st.markdown("### 📝 Video Understanding Check")
+        st.info("This is a basic quiz to check your understanding of the video content.")
+        
+        # Create simple questions based on available content
+        if content.get('summary'):
+            st.markdown("**Question 1:** What is the main topic discussed in this video?")
+            st.text_area("Your answer:", key="q1_answer", height=100)
+            
+        if content.get('key_points'):
+            st.markdown("**Question 2:** List three key points you learned from this video:")
+            st.text_area("Your answer:", key="q2_answer", height=150)
+        
+        if st.button("Submit Answers"):
+            st.success("Thank you for completing the quiz! Review the video content to check your understanding.")
+
+    def _process_video_content(self, video_data):
+        """Process and structure video content for display."""
+        if not video_data or 'content' not in video_data:
+            return None
+
+        content = video_data['content']
+        processed_content = {
+            'summary': content.get('summary', ''),
+            'key_points': content.get('key_points', []),
+            'study_guide': content.get('study_guide', ''),
+            'transcript': content.get('transcript', ''),
+            'analysis': content.get('analysis', ''),
+            'key_concepts': content.get('key_concepts', []),
+            'vocabulary': content.get('vocabulary', []),
+            'text': content.get('text', ''),
+            'content': self._format_main_content(content)  # Use dedicated formatter
+        }
+        return processed_content
+
+    def _format_main_content(self, content):
+        """Format the main content section with all available information."""
+        formatted_parts = []
+
+        # Add main content if available
+        if content.get('content'):
+            formatted_parts.append("# Summary\n" + content['content'] + "\n")
+
+        # Add detailed analysis if available
+        if content.get('analysis'):
+            formatted_parts.append("\n# Detailed Analysis\n" + content['analysis'] + "\n")
+
+        # Add key concepts if available
+        if content.get('key_concepts'):
+            formatted_parts.append("\n# Key Concepts\n")
+            for concept in content['key_concepts']:
+                formatted_parts.append(f"• {concept}\n")
+
+        # Add vocabulary if available
+        if content.get('vocabulary'):
+            formatted_parts.append("\n# Important Terms\n")
+            for term in content['vocabulary']:
+                formatted_parts.append(f"• {term}\n")
+
+        # Add transcript excerpts if available
+        if content.get('transcript'):
+            formatted_parts.append("\n# Transcript Highlights\n")
+            transcript_preview = content['transcript'][:1000] + "..." if len(content['transcript']) > 1000 else content['transcript']
+            formatted_parts.append(transcript_preview + "\n")
+
+        # If no specific content is available, create a comprehensive overview
+        if not formatted_parts:
+            formatted_parts = [
+                "# Content Overview\n",
+                f"Summary:\n{content.get('summary', 'No summary available.')}\n\n",
+                "Key Points:\n" + "\n".join(f"• {point}" for point in content.get('key_points', ['No key points available.'])) + "\n\n",
+                f"Study Focus:\n{content.get('study_guide', 'No study guide available.')}\n"
+            ]
+
+        return "\n".join(formatted_parts)
+
+    def _display_video_content(self, video_data):
+        """Display the video content in a structured format."""
+        if not video_data:
+            st.warning("⚠️ No video content available")
+            return
+
+        processed_content = self._process_video_content(video_data)
+        if not processed_content:
+            st.warning("⚠️ Could not process video content")
+            return
+
+        # Display main sections
+        with st.expander("📝 Summary", expanded=True):
+            if processed_content['summary']:
+                st.markdown(processed_content['summary'])
+            else:
+                st.info("No summary available")
+
+        with st.expander("🔑 Key Points", expanded=True):
+            if processed_content['key_points']:
+                for point in processed_content['key_points']:
+                    st.markdown(f"• {point}")
+            else:
+                st.info("No key points available")
+
+        with st.expander("📚 Study Guide", expanded=True):
+            if processed_content['study_guide']:
+                st.markdown(processed_content['study_guide'])
+            else:
+                st.info("No study guide available")
+
+        with st.expander("📑 Content", expanded=True):
+            if processed_content['content']:
+                st.markdown(processed_content['content'])
+            else:
+                # Generate comprehensive content from available information
+                fallback_content = [
+                    "# Content Overview",
+                    f"**Main Topic Analysis**\n{processed_content['summary']}",
+                    "\n**Key Points Analysis**"
+                ]
+                for point in processed_content['key_points']:
+                    fallback_content.append(f"• Detailed Analysis: {point}")
+                
+                if processed_content['study_guide']:
+                    fallback_content.append(f"\n**Study Guide Analysis**\n{processed_content['study_guide']}")
+                
+                if processed_content['key_concepts']:
+                    fallback_content.append("\n**Key Concepts Analysis**")
+                    for concept in processed_content['key_concepts']:
+                        fallback_content.append(f"• {concept}")
+                
+                st.markdown("\n\n".join(fallback_content))
+
+    def render_content(self):
+        """Render the video content page."""
+        if "current_video" not in st.session_state or not st.session_state.current_video:
+            st.warning("⚠️ Please select a video first")
+            return
+
+        video_data = st.session_state.processed_videos.get(st.session_state.current_video)
+        if not video_data:
+            st.warning("⚠️ Video data not found")
+            return
+
+        st.markdown("## 📺 Video Content")
+        
+        # Display video information
+        if 'info' in video_data:
+            st.markdown(f"### {video_data['info'].get('title', 'Untitled Video')}")
+            if 'description' in video_data['info']:
+                st.markdown(f"_{video_data['info']['description']}_")
+
+        # Display processed content
+        self._display_video_content(video_data)
+
+    def process_video(self, video_path: str):
+        """Process video and extract content."""
+        try:
+            if not os.path.exists(video_path):
+                st.error(f"❌ Video file not found: {video_path}")
+                return False
+
+            with st.spinner("Processing video..."):
+                # Get video info
+                video_info = self.video_handler.get_video_info(video_path)
+                if not video_info:
+                    st.error("❌ Failed to get video information")
+                    return False
+
+                # Extract audio and generate transcript
+                transcript = self.video_handler.extract_transcript(video_path)
+                if not transcript:
+                    st.error("❌ Failed to generate transcript")
+                    return False
+
+                # Generate content from transcript
+                content = self.video_handler.generate_content(transcript)
+                if not content:
+                    st.error("❌ Failed to generate content")
+                    return False
+
+                # Generate additional analysis
+                try:
+                    analysis = self.video_handler.analyze_content(transcript, content)
+                except:
+                    analysis = None
+
+                # Combine all content
+                processed_content = {
+                    'summary': content.get('summary', ''),
+                    'key_points': content.get('key_points', []),
+                    'study_guide': content.get('study_guide', ''),
+                    'transcript': transcript,
+                    'analysis': analysis,
+                    'key_concepts': content.get('key_concepts', []),
+                    'vocabulary': content.get('vocabulary', []),
+                    'text': content.get('text', ''),
+                    'content': content.get('content', '')
+                }
+
+                # Store processed video data
+                video_key = os.path.basename(video_path)
+                st.session_state.processed_videos[video_key] = {
+                    'path': video_path,
+                    'info': video_info,
+                    'content': processed_content
+                }
+                st.session_state.current_video = video_key
+
+                return True
+
+        except Exception as e:
+            st.error(f"❌ Error processing video: {str(e)}")
+            return False
+
+    def _generate_full_content(self, content, transcript):
+        """Generate comprehensive content from all available information."""
+        content_parts = []
+
+        # Add summary if available
+        if content.get('summary'):
+            content_parts.append("# Summary\n" + content['summary'])
+
+        # Add key points if available
+        if content.get('key_points'):
+            content_parts.append("\n# Key Points\n" + "\n".join(f"• {point}" for point in content['key_points']))
+
+        # Add study guide if available
+        if content.get('study_guide'):
+            content_parts.append("\n# Study Guide\n" + content['study_guide'])
+
+        # Add main content or transcript
+        main_content = content.get('text', content.get('content', ''))
+        if main_content:
+            content_parts.append("\n# Detailed Content\n" + main_content)
+        elif transcript:
+            content_parts.append("\n# Transcript\n" + transcript)
+
+        # Join all parts with proper spacing
+        return "\n\n".join(content_parts)

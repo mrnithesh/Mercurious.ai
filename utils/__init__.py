@@ -1,4 +1,4 @@
 # utils/__init__.py
 
-from utils.transcript import TranscriptProcessor
-from utils.recommendations import RecommendationEngine
+# Import statements moved to where they are needed to avoid circular imports
+__all__ = ['TranscriptProcessor', 'RecommendationEngine']

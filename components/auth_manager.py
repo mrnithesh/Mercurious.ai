@@ -50,9 +50,15 @@ class AuthManager:
                 'last_login': datetime.datetime.now()
             })
             
+            # Get user data
+            user_data = self.db.collection('users').document(user.uid).get().to_dict()
+            
             # Set session state
             st.session_state.authentication_status = True
+            st.session_state.authenticated = True
             st.session_state.user = user
+            st.session_state.user_data = user_data
+            st.session_state.current_page = "home"
             
             return True
             
@@ -66,15 +72,20 @@ class AuthManager:
     def logout_user(self):
         """Logout the current user."""
         try:
-            # Clear authentication status
+            # Clear session state
             st.session_state.authentication_status = False
+            st.session_state.authenticated = False
             st.session_state.user = None
+            st.session_state.user_data = {}
+            st.session_state.current_page = "home"
             
-            # Clear any other user-specific session data
+            # Clear video-specific data
             if 'current_video' in st.session_state:
                 del st.session_state.current_video
             if 'processed_videos' in st.session_state:
                 del st.session_state.processed_videos
+            if 'quiz_state' in st.session_state:
+                del st.session_state.quiz_state
             
             return True
         except Exception as e:

@@ -6,6 +6,13 @@ from components.data_manager import DataManager
 from components.chat import Chat
 import os
 
+# Set page config at the very start
+st.set_page_config(
+    page_title="Learning Assistant",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 chat = Chat(api_key=os.getenv('GEMINI_API_KEY'))
 
 def main():
@@ -26,4 +33,4 @@ def main():
         interface.run()
 
 if __name__ == "__main__":
-    main() 
+    main()

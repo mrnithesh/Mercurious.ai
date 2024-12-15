@@ -14,10 +14,19 @@ MODELS_DIR = ROOT_DIR / "models"
 DATA_DIR.mkdir(exist_ok=True)
 MODELS_DIR.mkdir(exist_ok=True)
 
+# Model configuration
+MODEL_CONFIG = {
+    "gemini_model": "gemini-pro",
+    "temperature": 0.7,
+    "max_output_tokens": 2048,
+}
+
 # API Keys
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+
+# Check if API key is available
 if not GEMINI_API_KEY:
-    raise ValueError("GEMINI_API_KEY not found in environment variables. Please check your .env file")
+    raise ValueError("GEMINI_API_KEY environment variable is not set. Please set it before running the application.")
 
 # App Configuration
 APP_CONFIG = {
@@ -25,13 +34,6 @@ APP_CONFIG = {
     "version": "1.0.0",
     "description": "An AI-powered learning assistant for video content",
     "author": "Your Name",
-}
-
-# Model Configuration
-MODEL_CONFIG = {
-    "gemini_model": "gemini-1.5-pro",
-    "temperature": 0.7,
-    "max_output_tokens": 1024,
 }
 
 # UI Configuration
