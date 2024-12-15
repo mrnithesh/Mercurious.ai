@@ -2,11 +2,15 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from typing import Dict, Optional
 import google.generativeai as genai
 from config import GEMINI_API_KEY, MODEL_CONFIG
+import time
 
 class TranscriptProcessor:
     def __init__(self):
         genai.configure(api_key=GEMINI_API_KEY)
         self.model = genai.GenerativeModel(MODEL_CONFIG["gemini_model"])
+        self.last_api_call = time.time()
+        self.min_delay = 1  # Minimum delay between API calls in seconds
+        self.max_retries = 5  # Maximum number of retries for API calls
 
     def fetch_transcript(self, video_id: str) -> Optional[str]:
         """Fetch transcript from YouTube."""
@@ -27,17 +31,47 @@ class TranscriptProcessor:
             "vocabulary": self._extract_vocabulary(transcript)
         }
 
+    def _make_api_call(self, prompt: str, retry_count: int = 0) -> str:
+        """Make an API call with rate limiting and retries."""
+        try:
+            # Implement rate limiting
+            current_time = time.time()
+            time_since_last_call = current_time - self.last_api_call
+            if time_since_last_call < self.min_delay:
+                time.sleep(self.min_delay - time_since_last_call)
+
+            # Make the API call
+            response = self.model.generate_content(prompt)
+            self.last_api_call = time.time()
+            
+            if response and response.text:
+                return response.text
+            return ""
+
+        except Exception as e:
+            if "ResourceExhausted" in str(e) and retry_count < self.max_retries:
+                # If we hit the quota limit, wait longer and retry
+                wait_time = (retry_count + 1) * 2  # Exponential backoff
+                print(f"API quota reached. Waiting {wait_time} seconds before retrying...")
+                time.sleep(wait_time)
+                return self._make_api_call(prompt, retry_count + 1)
+            elif retry_count >= self.max_retries:
+                print("Maximum retries reached. Please try again later.")
+                return "Content processing temporarily unavailable."
+            else:
+                print(f"Error processing content: {str(e)}")
+                return "Error processing content. Please try again."
+
     def _generate_summary(self, transcript: str) -> str:
         """Generate a concise summary of the transcript."""
         prompt = f"Generate a concise summary of the following transcript:\n\n{transcript[:2000]}"
-        response = self.model.generate_content(prompt)
-        return response.text
+        return self._make_api_call(prompt)
 
     def _extract_key_points(self, transcript: str) -> list:
         """Extract key points from the transcript."""
         prompt = f"Extract 5-7 key points from the following transcript:\n\n{transcript[:2000]}"
-        response = self.model.generate_content(prompt)
-        return response.text.split('\n')
+        response = self._make_api_call(prompt)
+        return response.split('\n')
 
     def _segment_content(self, transcript: str) -> list:
         """Segment transcript into logical sections."""
@@ -48,8 +82,8 @@ class TranscriptProcessor:
 
         Transcript:
         {transcript[:2000]}"""
-        response = self.model.generate_content(prompt)
-        return response.text.split('\n\n')
+        response = self._make_api_call(prompt)
+        return response.split('\n\n')
 
     def _create_study_guide(self, transcript: str) -> str:
         """Create a comprehensive study guide."""
@@ -61,12 +95,11 @@ class TranscriptProcessor:
 
         Transcript:
         {transcript[:2000]}"""
-        response = self.model.generate_content(prompt)
-        return response.text
+        return self._make_api_call(prompt)
 
     def _extract_vocabulary(self, transcript: str) -> list:
         """Extract important vocabulary and definitions."""
         prompt = f"""Extract important terms and their definitions from this transcript:
         {transcript[:2000]}"""
-        response = self.model.generate_content(prompt)
-        return response.text.split('\n') 
+        response = self._make_api_call(prompt)
+        return response.split('\n') 

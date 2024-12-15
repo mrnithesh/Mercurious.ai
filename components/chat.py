@@ -1,191 +1,168 @@
 import streamlit as st
-import google.generativeai as genai
-from typing import List, Dict, Optional
-from config import GEMINI_API_KEY, MODEL_CONFIG
+from google.generativeai import GenerativeModel
 import time
 from datetime import datetime
+from typing import Dict, List, Optional
+import json
 
-class ChatEngine:
-    def __init__(self):
-        genai.configure(api_key=GEMINI_API_KEY)
-        self.model = genai.GenerativeModel(MODEL_CONFIG["gemini_model"])
-        self.history = []
-        self._initialize_session_state()
+class Chat:
+    def __init__(self, api_key: str):
+        """Initialize chat with Gemini Pro model."""
+        self.api_key = api_key
+        self.model = GenerativeModel('gemini-pro')
+        self.chat_history = []
+        self.initialize_session_state()
 
-    def _initialize_session_state(self):
-        """Initialize session state for chat history."""
-        if "chat_history" not in st.session_state:
-            st.session_state.chat_history = []
-        if "context" not in st.session_state:
-            st.session_state.context = None
+    def initialize_session_state(self):
+        """Initialize or reset session state variables."""
+        if 'messages' not in st.session_state:
+            st.session_state.messages = []
+        if 'chat_context' not in st.session_state:
+            st.session_state.chat_context = None
 
     def set_context(self, video_data: Dict):
-        """Set video context for the chat."""
-        if video_data and 'content' in video_data:
-            context = f"""
-            Video Title: {video_data.get('title', '')}
-            
-            Transcript:
-            {video_data.get('content', {}).get('transcript', '')}
-            
-            Summary:
-            {video_data.get('content', {}).get('summary', '')}
-            
-            Key Points:
-            {', '.join(video_data.get('content', {}).get('key_points', []))}
-            """
-            st.session_state.context = context
-            # Add system message to chat history
-            self._add_message("system", "Context updated with new video content.")
+        """Set the context for the chat based on video data."""
+        context = f"""Video Title: {video_data.get('title', 'Unknown')}
+        Description: {video_data.get('description', 'No description available')}
+        Topic: {video_data.get('topic', 'General')}
+        Key Points: {', '.join(video_data.get('key_points', ['No key points available']))}
+        """
+        st.session_state.chat_context = context
+        return context
 
-    def _add_message(self, role: str, content: str):
+    def process_message(self, user_input: str, context: List[Dict] = None) -> str:
+        """Process user message and generate response."""
+        try:
+            # Create chat context
+            video_context = st.session_state.chat_context or "You are a helpful AI assistant."
+            
+            # Prepare chat history for context
+            history_context = "\n".join([
+                f"User: {msg['content']}" if msg['role'] == 'user' else f"Assistant: {msg['content']}"
+                for msg in (context or [])[-5:]  # Include last 5 messages for context
+            ])
+
+            # Combine context, history, and current input
+            full_prompt = f"{video_context}\n\nChat History:\n{history_context}\n\nUser: {user_input}\nAssistant:"
+
+            # Add rate limiting
+            current_time = time.time()
+            if hasattr(self, 'last_api_call'):
+                time_since_last_call = current_time - self.last_api_call
+                if time_since_last_call < 1:  # 1 second minimum delay
+                    time.sleep(1 - time_since_last_call)
+            
+            # Generate response
+            chat = self.model.start_chat(history=[])
+            response = chat.send_message(full_prompt)
+            self.last_api_call = time.time()
+            
+            if response and response.text:
+                return response.text
+            else:
+                return "I apologize, but I couldn't generate a response. Please try asking your question differently."
+
+        except Exception as e:
+            if "ResourceExhausted" in str(e):
+                st.warning("API quota reached. Please wait a moment before trying again.")
+                time.sleep(2)  # Wait for 2 seconds before allowing next request
+                return "I'm currently experiencing high traffic. Please try your question again in a moment."
+            else:
+                st.error(f"Error generating response: {str(e)}")
+                return "I encountered an error while processing your request. Please try again."
+
+    def add_message(self, role: str, content: str):
         """Add a message to the chat history."""
-        st.session_state.chat_history.append({
+        timestamp = datetime.now().strftime("%H:%M")
+        message = {
             "role": role,
             "content": content,
-            "timestamp": datetime.now().strftime("%H:%M")
-        })
+            "timestamp": timestamp
+        }
+        st.session_state.messages.append(message)
 
-    def _build_prompt(self, query: str) -> str:
-        """Build context-aware prompt for the AI."""
-        if st.session_state.context:
-            return f"""As an AI learning assistant, help the user understand the video content. 
-            Use this context to provide accurate, relevant answers:
-            
-            {st.session_state.context}
-            
-            User Question: {query}
-            
-            Remember to:
-            1. Be specific and reference the video content
-            2. Explain concepts clearly
-            3. Provide examples when helpful
-            4. Admit if something isn't covered in the video
-            """
-        return query
+    def clear_chat(self):
+        """Clear the chat history."""
+        st.session_state.messages = []
 
-    def process_message(self, user_input: str) -> Optional[str]:
-        """Process user message and generate AI response."""
-        try:
-            # Add user message to history
-            self._add_message("user", user_input)
-            
-            # Build context-aware prompt
-            prompt = self._build_prompt(user_input)
-            
-            # Get AI response
-            with st.spinner("Thinking..."):
-                response = self.model.send_message(prompt)
-                ai_response = response.text
-            
-            # Add AI response to history
-            self._add_message("assistant", ai_response)
-            
-            return ai_response
-            
-        except Exception as e:
-            error_msg = f"Error processing message: {str(e)}"
-            st.error(error_msg)
-            self._add_message("system", error_msg)
-            return None
-
-    def display_chat_interface(self, video_data):
+    def display_chat_interface(self, video_data: Optional[Dict] = None):
+        """Display the chat interface with styling."""
+        # Add custom CSS
         st.markdown("""
             <style>
+                /* Chat container */
                 .chat-container {
-                    background: rgba(255, 75, 75, 0.03);
+                    background: linear-gradient(180deg, rgba(74, 144, 226, 0.05) 0%, rgba(74, 144, 226, 0.02) 100%);
                     border-radius: 16px;
                     padding: 1.5rem;
                     margin: 1rem 0;
+                    border: 1px solid rgba(74, 144, 226, 0.1);
                 }
-                .chat-header {
-                    display: flex;
-                    align-items: center;
-                    margin-bottom: 1rem;
+
+                /* Message styles */
+                .message {
+                    padding: 1rem;
+                    border-radius: 12px;
+                    margin: 0.5rem 0;
+                    max-width: 80%;
+                    position: relative;
                 }
-                .chat-header img {
-                    width: 40px;
-                    height: 40px;
-                    border-radius: 50%;
-                    margin-right: 1rem;
+
+                .message.user {
+                    background: rgba(74, 144, 226, 0.1);
+                    margin-left: auto;
+                    border-bottom-right-radius: 4px;
                 }
-                .message-time {
-                    font-size: 0.8rem;
-                    color: #666;
-                    margin-top: 0.25rem;
-                }
-                .typing-indicator {
-                    display: flex;
-                    gap: 0.5rem;
-                    padding: 0.5rem;
-                    border-radius: 8px;
-                    background: rgba(255, 75, 75, 0.1);
-                    width: fit-content;
-                }
-                .typing-dot {
-                    width: 8px;
-                    height: 8px;
-                    background: #FF4B4B;
-                    border-radius: 50%;
-                    animation: typing 1s infinite;
-                }
-                .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-                .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-                @keyframes typing {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-5px); }
+
+                .message.assistant {
+                    background: rgba(69, 183, 209, 0.1);
+                    margin-right: auto;
+                    border-bottom-left-radius: 4px;
                 }
             </style>
         """, unsafe_allow_html=True)
-        
-        # Chat container
-        st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-        
-        # Chat header
-        st.markdown('''
-            <div class="chat-header">
-                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=ai-assistant" alt="AI Assistant"/>
-                <h3>AI Learning Assistant</h3>
-            </div>
-        ''', unsafe_allow_html=True)
-        
-        # Display chat messages
-        for message in st.session_state.chat_history:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
-                st.markdown(f'<div class="message-time">{message["timestamp"]}</div>', 
-                          unsafe_allow_html=True)
-        
-        # Chat input
-        if prompt := st.chat_input("Ask me anything about the video..."):
-            # User message
-            with st.chat_message("user"):
-                st.markdown(prompt)
-                st.markdown(f'<div class="message-time">{datetime.now().strftime("%I:%M %p")}</div>', 
-                          unsafe_allow_html=True)
-            self._add_message("user", prompt)
-            
-            # Show typing indicator
-            with st.chat_message("assistant"):
-                st.markdown('''
-                    <div class="typing-indicator">
-                        <div class="typing-dot"></div>
-                        <div class="typing-dot"></div>
-                        <div class="typing-dot"></div>
-                    </div>
-                ''', unsafe_allow_html=True)
-            
-            # Generate and display response
-            response = self.process_message(prompt)
-            with st.chat_message("assistant"):
-                st.markdown(response)
-                st.markdown(f'<div class="message-time">{datetime.now().strftime("%I:%M %p")}</div>', 
-                          unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
 
-    def clear_chat_history(self):
-        """Clear the chat history."""
-        st.session_state.chat_history = []
-        self.model = genai.GenerativeModel(MODEL_CONFIG["gemini_model"])
-        self._add_message("system", "Chat history cleared.")
+        # Set video context if provided
+        if video_data:
+            self.set_context(video_data)
+
+        # Display chat header
+        st.subheader("💬 Chat Assistant")
+
+        # Display chat messages
+        for message in st.session_state.messages:
+            with st.container():
+                if message["role"] == "user":
+                    st.markdown(f"<div class='message user'>You: {message['content']}<br><small>{message['timestamp']}</small></div>", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"<div class='message assistant'>Assistant: {message['content']}<br><small>{message['timestamp']}</small></div>", unsafe_allow_html=True)
+
+        # Chat input
+        with st.container():
+            col1, col2 = st.columns([6, 1])
+            with col1:
+                user_input = st.text_input("Type your message...", key="chat_input", placeholder="Ask me anything about the video...")
+            with col2:
+                clear_button = st.button("Clear", key="clear_chat")
+
+            if clear_button:
+                self.clear_chat()
+                st.rerun()
+
+            if user_input:
+                # Add user message
+                self.add_message("user", user_input)
+                
+                # Show typing indicator
+                with st.spinner("Thinking..."):
+                    # Generate and add assistant response
+                    response = self.process_message(user_input, st.session_state.messages)
+                    self.add_message("assistant", response)
+                
+                # Clear input and rerun to update chat
+                st.session_state.chat_input = ""
+                st.rerun()
+
+    def get_chat_history(self) -> List[Dict]:
+        """Return the chat history."""
+        return st.session_state.messages

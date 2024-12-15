@@ -2,10 +2,11 @@ import streamlit as st
 from typing import Dict, Any
 from components.video import VideoHandler
 from components.quiz import QuizGenerator
-from components.chat import ChatEngine
+from components.chat import Chat
 from components.avatar import Avatar
 from utils.recommendations import RecommendationEngine
 import time
+import os
 
 # Set page config at the very beginning, before any other st commands
 st.set_page_config(
@@ -23,7 +24,7 @@ class StreamlitInterface:
     def __init__(self, auth_manager, data_manager):
         self.video_handler = VideoHandler()
         self.quiz_generator = QuizGenerator()
-        self.chat_engine = ChatEngine()
+        self.chat = Chat(api_key=os.getenv('GEMINI_API_KEY'))
         self.recommendation_engine = RecommendationEngine()
         self.auth_manager = auth_manager
         self.data_manager = data_manager
@@ -52,6 +53,16 @@ class StreamlitInterface:
         """Load custom CSS for better styling."""
         st.markdown("""
             <style>
+                /* Color Variables */
+                :root {
+                    --primary-color: #4A90E2;
+                    --secondary-color: #45B7D1;
+                    --accent-color: #FF6B6B;
+                    --success-color: #2ECC71;
+                    --warning-color: #F1C40F;
+                    --error-color: #E74C3C;
+                }
+
                 /* Global Styles */
                 .main .block-container {
                     padding: 2rem 3rem;
@@ -59,11 +70,28 @@ class StreamlitInterface:
                     margin: 0 auto;
                 }
 
-                /* Card-like containers */
-                .stMarkdown div {
-                    border-radius: 10px;
-                    padding: 1rem;
-                    margin-bottom: 1rem;
+                /* Sidebar */
+                [data-testid="stSidebar"] {
+                    background: linear-gradient(180deg, rgba(74, 144, 226, 0.1) 0%, rgba(74, 144, 226, 0.05) 100%);
+                    padding: 2rem 1rem;
+                }
+
+                [data-testid="stSidebar"] .stRadio label {
+                    font-weight: 500;
+                    padding: 0.5rem 1rem;
+                    border-radius: 8px;
+                    transition: all 0.2s ease;
+                }
+
+                [data-testid="stSidebar"] .stRadio label:hover {
+                    background: rgba(74, 144, 226, 0.1);
+                }
+
+                /* Headers */
+                h1, h2, h3 {
+                    color: var(--primary-color) !important;
+                    font-weight: 600;
+                    margin-bottom: 1.5rem;
                 }
 
                 /* Buttons */
@@ -74,24 +102,27 @@ class StreamlitInterface:
                     font-weight: 500;
                     transition: all 0.3s ease;
                     border: none;
-                    background: linear-gradient(90deg, #FF4B4B 0%, #FF6B6B 100%);
-                    color: white;
+                    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+                    color: white !important;
                 }
+
                 .stButton button:hover {
                     transform: translateY(-2px);
-                    box-shadow: 0 4px 12px rgba(255, 75, 75, 0.2);
+                    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
                 }
 
                 /* Input fields */
-                .stTextInput input, .stSelectbox select {
+                .stTextInput input, .stSelectbox select, .stTextArea textarea {
                     border-radius: 8px;
-                    border: 2px solid #eee;
+                    border: 2px solid rgba(74, 144, 226, 0.2);
                     padding: 0.5rem;
                     transition: all 0.3s ease;
+                    background-color: rgba(255, 255, 255, 0.9);
                 }
-                .stTextInput input:focus, .stSelectbox select:focus {
-                    border-color: #FF4B4B;
-                    box-shadow: 0 0 0 2px rgba(255, 75, 75, 0.1);
+
+                .stTextInput input:focus, .stSelectbox select:focus, .stTextArea textarea:focus {
+                    border-color: var(--primary-color);
+                    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
                 }
 
                 /* Chat messages */
@@ -100,73 +131,121 @@ class StreamlitInterface:
                     padding: 1rem !important;
                     margin: 0.5rem 0 !important;
                     transition: transform 0.2s ease;
+                    border: 1px solid rgba(74, 144, 226, 0.1);
                 }
+
                 .stChatMessage:hover {
                     transform: translateX(4px);
                 }
-                .stChatMessage [data-testid="stMarkdownContainer"] p {
-                    line-height: 1.6;
+
+                /* Expanders */
+                .streamlit-expanderHeader {
+                    font-weight: 500;
+                    border-radius: 8px;
+                    transition: all 0.2s ease;
                 }
 
-                /* Sidebar */
-                [data-testid="stSidebar"] {
-                    background: linear-gradient(180deg, rgba(255,75,75,0.05) 0%, rgba(255,75,75,0) 100%);
-                    padding: 2rem 1rem;
-                }
-                [data-testid="stSidebar"] .stMarkdown {
-                    margin-bottom: 2rem;
+                .streamlit-expanderHeader:hover {
+                    background: rgba(74, 144, 226, 0.1);
                 }
 
-                /* Headers */
-                h1, h2, h3 {
-                    background: linear-gradient(90deg, #FF4B4B, #FF6B6B);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    margin-bottom: 1.5rem;
+                /* Metrics */
+                [data-testid="stMetricValue"] {
+                    font-size: 1.8rem !important;
+                    color: var(--primary-color) !important;
+                }
+
+                /* Dark mode specific styles */
+                @media (prefers-color-scheme: dark) {
+                    :root {
+                        --primary-color: #5B9FE8;
+                        --secondary-color: #56C7E1;
+                    }
+
+                    .main .block-container {
+                        background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.1) 100%);
+                    }
+
+                    [data-testid="stSidebar"] {
+                        background: linear-gradient(180deg, rgba(91, 159, 232, 0.1) 0%, rgba(91, 159, 232, 0.05) 100%);
+                    }
+
+                    .stTextInput input, .stSelectbox select, .stTextArea textarea {
+                        background-color: rgba(0, 0, 0, 0.2);
+                        color: white;
+                        border-color: rgba(91, 159, 232, 0.3);
+                    }
+
+                    .stChatMessage {
+                        background-color: rgba(91, 159, 232, 0.1) !important;
+                        border-color: rgba(91, 159, 232, 0.2);
+                    }
+
+                    .streamlit-expanderHeader {
+                        background: rgba(91, 159, 232, 0.1);
+                    }
+
+                    .streamlit-expanderHeader:hover {
+                        background: rgba(91, 159, 232, 0.2);
+                    }
+                }
+
+                /* Alert boxes */
+                .stAlert {
+                    border-radius: 8px;
+                    border: none;
+                    padding: 1rem;
+                }
+
+                .stAlert.success {
+                    background-color: rgba(46, 204, 113, 0.1);
+                    border-left: 4px solid var(--success-color);
+                }
+
+                .stAlert.warning {
+                    background-color: rgba(241, 196, 15, 0.1);
+                    border-left: 4px solid var(--warning-color);
+                }
+
+                .stAlert.error {
+                    background-color: rgba(231, 76, 60, 0.1);
+                    border-left: 4px solid var(--error-color);
                 }
 
                 /* Progress bars */
                 .stProgress > div > div {
-                    background: linear-gradient(90deg, #FF4B4B 0%, #FF6B6B 100%);
+                    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
                     border-radius: 10px;
                 }
 
-                /* Alerts */
-                .stAlert {
-                    border-radius: 10px;
-                    border: none;
+                /* Tooltips */
+                .tooltip {
+                    position: relative;
+                    display: inline-block;
                 }
 
-                /* Dark mode specific styles */
-                [data-testid="stAppViewContainer"].dark {
-                    background: linear-gradient(180deg, #1E1E1E 0%, #2D2D2D 100%);
+                .tooltip .tooltiptext {
+                    visibility: hidden;
+                    background-color: rgba(0, 0, 0, 0.8);
+                    color: white;
+                    text-align: center;
+                    border-radius: 6px;
+                    padding: 0.5rem 1rem;
+                    position: absolute;
+                    z-index: 1;
+                    bottom: 125%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    opacity: 0;
+                    transition: opacity 0.3s;
                 }
-                .dark .stChatMessage {
-                    background: rgba(255, 255, 255, 0.05) !important;
-                    backdrop-filter: blur(10px);
-                }
-                .dark .stButton button {
-                    background: linear-gradient(90deg, #FF4B4B 0%, #FF6B6B 100%);
+
+                .tooltip:hover .tooltiptext {
+                    visibility: visible;
+                    opacity: 1;
                 }
             </style>
         """, unsafe_allow_html=True)
-
-    def _initialize_avatar(self):
-        """Initialize avatar after user authentication"""
-        if not self.avatar:
-            if not st.session_state.user:
-                st.error("Failed to initialize avatar: User not authenticated")
-                st.stop()
-            
-            user_data = self.auth_manager.get_current_user()
-            if not user_data:
-                st.error("Failed to load user data")
-                st.stop()
-                
-            self.avatar = Avatar(
-                user_id=st.session_state.user.uid,
-                db=self.data_manager.db
-            )
 
     def _apply_theme(self):
         """Apply the current theme."""
@@ -478,7 +557,7 @@ class StreamlitInterface:
 
             with st.chat_message("assistant"):
                 with st.spinner("Thinking..."):
-                    response = self.chat_engine.process_message(prompt, context=st.session_state.messages)
+                    response = self.chat.process_message(prompt, context=st.session_state.messages)
                     st.markdown(f'<div class="chat-message assistant-message">{response}</div>', 
                               unsafe_allow_html=True)
                 
@@ -658,6 +737,22 @@ class StreamlitInterface:
                 if self.auth_manager.register_user(reg_email, reg_password, name):
                     st.success("Registration successful! Please login.")
 
+    def _initialize_avatar(self):
+        """Initialize avatar after user authentication"""
+        if not self.avatar:
+            if not hasattr(st.session_state, 'user') or not st.session_state.user:
+                return  # Skip avatar initialization if user is not authenticated
+            
+            try:
+                user_data = self.auth_manager.get_current_user()
+                if user_data:
+                    self.avatar = Avatar(
+                        user_id=st.session_state.user.uid,
+                        db=self.data_manager.db
+                    )
+            except Exception as e:
+                st.error(f"Failed to initialize avatar: {str(e)}")
+
     def run(self):
         """Run the main application."""
         # Handle settings changes at the start of the run
@@ -670,36 +765,30 @@ class StreamlitInterface:
             st.session_state.settings_changed = False
             del st.session_state.new_settings
         
+        # Initialize avatar only if user is authenticated
+        if hasattr(st.session_state, 'user') and st.session_state.user:
+            self._initialize_avatar()
+
         # Apply theme before rendering anything
         self._apply_theme()
         
-        self._initialize_avatar()  # Initialize avatar when running main interface
-        try:
-            self.render_navigation()
+        # Render navigation
+        self.render_navigation()
 
-            # Route to the appropriate page based on current_page state
-            page_routes = {
-                "home": self.render_home,
-                "learn": self.render_learn,
-                "quiz": self.render_quiz,
-                "progress": self.render_progress,
-                "settings": self.render_settings
-            }
-
-            # Get the current page from session state
-            current_page = st.session_state.get("current_page", "home")
-
-            # Render the appropriate page
-            if current_page in page_routes:
-                page_routes[current_page]()
-            else:
-                st.error("Page not found")
-                st.session_state.current_page = "home"
+        # Render current page
+        if not st.session_state.user:
+            self.render_login()
+        else:
+            if st.session_state.current_page == "home":
                 self.render_home()
-
-        except Exception as e:
-            st.error(f"An error occurred: {str(e)}")
-            st.write("Please try refreshing the page or contact support if the issue persists.")
+            elif st.session_state.current_page == "learn":
+                self.render_learn()
+            elif st.session_state.current_page == "quiz":
+                self.render_quiz()
+            elif st.session_state.current_page == "progress":
+                self.render_progress()
+            elif st.session_state.current_page == "settings":
+                self.render_settings()
 
     def _save_notes(self, notes: str) -> bool:
         """Save notes with DataManager."""

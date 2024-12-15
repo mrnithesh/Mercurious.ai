@@ -3,6 +3,10 @@ from interfaces.streamlit_ui import StreamlitInterface
 from firebase_config import initialize_firebase
 from components.auth_manager import AuthManager
 from components.data_manager import DataManager
+from components.chat import Chat
+import os
+
+chat = Chat(api_key=os.getenv('GEMINI_API_KEY'))
 
 def main():
     # Initialize Firebase
