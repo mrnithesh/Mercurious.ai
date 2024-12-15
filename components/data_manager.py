@@ -166,3 +166,15 @@ class DataManager:
         except Exception as e:
             print(f"Error deleting video: {str(e)}")
             return False
+
+    def update_user_settings(self, user_id: str, settings: Dict[str, Any]) -> bool:
+        """Update user settings in the database."""
+        try:
+            self.db.collection('users').document(user_id).update({
+                'settings': settings,
+                'updated_at': datetime.datetime.now()
+            })
+            return True
+        except Exception as e:
+            print(f"Error updating user settings: {str(e)}")
+            return False
