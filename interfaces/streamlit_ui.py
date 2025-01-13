@@ -793,8 +793,14 @@ class StreamlitInterface:
                     st.error(f"Failed to save settings: {str(e)}")
 
     def render_login(self):
-        """Render login/register interface."""
+        """Render enhanced login/register interface with logo and improved UI."""
+        st.markdown("""
+            <div style='text-align: center;'>
+                <img src='logo.jpg' width='150'>
+            </div>
+            """, unsafe_allow_html=True)
         st.title("Welcome to Mercurious.ai")
+        st.subheader("Your AI Learning Assistant")
         
         tab1, tab2 = st.tabs(["Login", "Register"])
         
@@ -817,6 +823,8 @@ class StreamlitInterface:
             if st.button("Register"):
                 if self.auth_manager.register_user(reg_email, reg_password, name):
                     st.success("Registration successful! Please login.")
+        
+        st.markdown("<hr>", unsafe_allow_html=True)
 
     def _initialize_avatar(self):
         """Initialize avatar settings."""
