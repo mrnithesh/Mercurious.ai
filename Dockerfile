@@ -14,10 +14,10 @@ RUN pip install -r requirements.txt
 COPY . .
 
 # Set environment variables
-ENV PORT=8080
+COPY .env .
 
 # Expose port
-EXPOSE 8080
+EXPOSE 8501
 
 # Command to run the application
-CMD streamlit run main.py --server.port $PORT --server.address 0.0.0.0 
+CMD ["streamlit", "run", "app.py"]
