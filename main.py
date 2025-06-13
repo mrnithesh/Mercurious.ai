@@ -8,7 +8,7 @@ import os
 
 # Set page config at the very start
 st.set_page_config(
-    page_title="Mercuirous.ai - Your AI Learning Assistant",
+    page_title="Mercurious.ai - Your AI Learning Assistant",
     layout="wide",
     initial_sidebar_state="expanded"
 )
