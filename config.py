@@ -21,17 +21,17 @@ if not GEMINI_API_KEY:
 
 # App Configuration
 APP_CONFIG = {
-    "name": "AI Learning Assistant",
+    "name": "Mercurious.ai - AI Learning Assistant",
     "version": "1.0.0",
     "description": "An AI-powered learning assistant for video content",
-    "author": "Your Name",
+    "author": "Nithesh",
 }
 
 # Model Configuration
 MODEL_CONFIG = {
-    "gemini_model": "gemini-1.5-pro",
+    "gemini_model": "gemini-2.0-flash",
     "temperature": 0.7,
-    "max_output_tokens": 1024,
+    "max_output_tokens": 2048,
 }
 
 # UI Configuration
@@ -47,7 +47,8 @@ FIREBASE_CONFIG = {
     "auth_domain": os.getenv("FIREBASE_AUTH_DOMAIN"),
     "project_id": os.getenv("FIREBASE_PROJECT_ID"),
     "storage_bucket": os.getenv("FIREBASE_STORAGE_BUCKET"),
-    "credentials_path": ROOT_DIR / "config" / "firebase-credentials.json"
+    #"credentials_path": ROOT_DIR / "config" / "firebase-credentials.json"  #credential path
+    "credentials": os.getenv("FIREBASE_CREDENTIALS") #for deployment
 }
 
 # Validate Firebase configuration

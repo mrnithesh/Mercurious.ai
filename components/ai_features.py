@@ -1,4 +1,4 @@
- import google.generativeai as genai
+import google.generativeai as genai
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass
 import logging
@@ -15,7 +15,7 @@ if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY environment variable is not set")
 
 MODEL_CONFIG = {
-    "gemini_model": os.getenv('GEMINI_MODEL', 'gemini-pro'),
+    "gemini_model": os.getenv('GEMINI_MODEL', 'gemini-2.0-flash'),
     "temperature": float(os.getenv('GEMINI_TEMPERATURE', 0.7)),
     "max_output_tokens": int(os.getenv('GEMINI_MAX_TOKENS', 2048)),
 }
