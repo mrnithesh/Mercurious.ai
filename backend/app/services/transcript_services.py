@@ -1,7 +1,7 @@
 import asyncio
 from youtube_transcript_api import YouTubeTranscriptApi
 from typing import Dict, List
-import google.generativeai as genai
+import google.genai as genai
 from dotenv import load_dotenv
 import os
 from fastapi import HTTPException
@@ -16,8 +16,8 @@ class TranscriptService:
                 detail="GEMINI_API_KEY not found in environment variables"
             )
         
-        genai.configure(api_key=GEMINI_API_KEY)
-        self.model = genai.GenerativeModel('gemini-2.5-pro')
+        self.client = genai.Client(api_key=GEMINI_API_KEY)
+        self.model_name = 'gemini-2.5-flash'
 
     async def fetch_transcript(self, video_id: str) -> str:
         #fetch transcript from YouTube
@@ -89,7 +89,10 @@ class TranscriptService:
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
                 None, 
-                lambda: self.model.generate_content(prompt)
+                lambda: self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=prompt
+                )
             )
             if not response or not response.text:
                 raise HTTPException(
@@ -116,7 +119,10 @@ class TranscriptService:
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
                 None, 
-                lambda: self.model.generate_content(prompt)
+                lambda: self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=prompt
+                )
             )
             if not response or not response.text:
                 raise HTTPException(
@@ -150,7 +156,10 @@ class TranscriptService:
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
                 None, 
-                lambda: self.model.generate_content(prompt)
+                lambda: self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=prompt
+                )
             )
             if not response or not response.text:
                 return []  # Key concepts are optional, return empty list
@@ -178,7 +187,10 @@ class TranscriptService:
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
                 None, 
-                lambda: self.model.generate_content(prompt)
+                lambda: self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=prompt
+                )
             )
             if not response or not response.text:
                 raise HTTPException(
@@ -205,7 +217,10 @@ class TranscriptService:
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
                 None, 
-                lambda: self.model.generate_content(prompt)
+                lambda: self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=prompt
+                )
             )
             if not response or not response.text:
                 return []  # Vocabulary is optional, return empty list
@@ -234,7 +249,10 @@ class TranscriptService:
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
                 None, 
-                lambda: self.model.generate_content(prompt)
+                lambda: self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=prompt
+                )
             )
             if not response or not response.text:
                 return "Analysis could not be generated for this transcript."  # Graceful fallback

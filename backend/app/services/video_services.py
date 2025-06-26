@@ -6,8 +6,9 @@ from datetime import datetime
 from typing import Dict, Optional, List
 from fastapi import HTTPException
 from dotenv import load_dotenv
-from services.transcript_services import TranscriptService
-from models.video import VideoInfo, VideoContent, VideoResponse
+from pydantic import HttpUrl
+from .transcript_services import TranscriptService
+from ..models.video import VideoInfo, VideoContent, VideoResponse
 load_dotenv()
 
 class VideoService:
@@ -16,9 +17,9 @@ class VideoService:
         self.retry_delay = 2
         self.supported_domains = ['youtube.com', 'youtu.be']
 
-    async def extract_video_id(self, url: str) -> str:
+    async def extract_video_id(self, url: HttpUrl) -> str:
         """Extract video ID from YouTube URL."""
-        if not any(domain in url.lower() for domain in self.supported_domains):
+        if not any(domain in str(url).lower() for domain in self.supported_domains):
             raise HTTPException(status_code=400, detail="Only YouTube videos are supported")
 
         patterns = [
@@ -28,13 +29,13 @@ class VideoService:
         ]
         
         for pattern in patterns:
-            match = re.match(pattern, url)
+            match = re.match(pattern, str(url))
             if match:
                 return match.group(1)
         
         raise HTTPException(status_code=400, detail="Invalid YouTube URL format")
 
-    async def fetch_video_info(self, video_url: str, retry_count: int = 0) -> Dict:
+    async def fetch_video_info(self, video_url: HttpUrl, retry_count: int = 0) -> Dict:
         video_id = await self.extract_video_id(video_url)
         
         api_key = os.getenv("YOUTUBE_DATA_API")
@@ -89,7 +90,7 @@ class VideoService:
             return formatted_duration.strip()
         return duration
 
-    async def process_video(self, video_url: str) -> VideoResponse:
+    async def process_video(self, video_url: HttpUrl) -> VideoResponse:
         try:
             # Get video info
             video_info_dict = await self.fetch_video_info(video_url)
