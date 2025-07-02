@@ -1,415 +1,407 @@
 'use client';
 
-import { useState } from 'react';
+import Link from 'next/link';
 import { 
   Brain, 
   Video, 
-  Play, 
-  Download, 
+  MessageSquare, 
   FileText, 
-  List, 
+  BarChart3, 
+  Shield, 
   Lightbulb, 
-  Book, 
-  SpellCheck,
-  BarChart3,
-  Plus,
-  AlertTriangle,
-  Loader2
+  BookOpen, 
+  ArrowRight,
+  CheckCircle,
+  Sparkles,
+  Users,
+  Github,
+  Linkedin,
+  Mail,
+  LogIn,
+  UserPlus,
+  Menu,
+  X
 } from 'lucide-react';
-import { apiClient, VideoResponse } from '@/lib/api';
-
-type ProcessingStep = 'fetch' | 'transcript' | 'ai';
-type ActiveTab = 'summary' | 'points' | 'concepts' | 'study' | 'vocab' | 'analysis';
+import { useState } from 'react';
 
 export default function Home() {
-  const [videoUrl, setVideoUrl] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState<ProcessingStep | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [results, setResults] = useState<VideoResponse | null>(null);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('summary');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!videoUrl.trim()) return;
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
 
-    // Validate YouTube URL
-    if (!apiClient.isValidYouTubeUrl(videoUrl)) {
-      setError('Please enter a valid YouTube URL');
-      return;
+  const features = [
+    {
+      icon: Shield,
+      title: "Secure Firebase Authentication",
+      description: "Safe and reliable user authentication with Firebase",
+      color: "from-emerald-500 to-teal-600"
+    },
+    {
+      icon: Video,
+      title: "YouTube Video Processing",
+      description: "Transform any YouTube video into structured learning content",
+      color: "from-red-500 to-pink-600"
+    },
+    {
+      icon: Brain,
+      title: "AI-Powered Content Analysis",
+      description: "Advanced AI analysis using Google's Gemini AI technology",
+      color: "from-purple-500 to-violet-600"
+    },
+    {
+      icon: MessageSquare,
+      title: "Interactive Chat Assistant",
+      description: "Get instant answers and clarifications about video content",
+      color: "from-blue-500 to-indigo-600"
+    },
+    {
+      icon: FileText,
+      title: "Smart Note-Taking",
+      description: "Automatically generated notes and summaries",
+      color: "from-orange-500 to-amber-600"
+    },
+    {
+      icon: BarChart3,
+      title: "Progress Tracking",
+      description: "Monitor your learning progress and achievements",
+      color: "from-indigo-500 to-purple-600"
+    },
+    {
+      icon: Lightbulb,
+      title: "Automated Quiz Generation",
+      description: "Test your knowledge with AI-generated quizzes",
+      color: "from-yellow-500 to-orange-600"
+    },
+    {
+      icon: BookOpen,
+      title: "Study Guide Creation",
+      description: "Comprehensive study guides tailored to video content",
+      color: "from-teal-500 to-cyan-600"
     }
+  ];
 
-    setIsLoading(true);
-    setError(null);
-    setResults(null);
-
-    try {
-      // Show processing steps
-      setCurrentStep('fetch');
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      setCurrentStep('transcript');
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      setCurrentStep('ai');
-      
-      // Make actual API call
-      const data = await apiClient.processVideo(videoUrl);
-      setResults(data);
-      setActiveTab('summary');
-
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to process video. Please try again.';
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-      setCurrentStep(null);
-    }
-  };
-
-  const clearError = () => {
-    setError(null);
-  };
-
-  const processNewVideo = () => {
-    setVideoUrl('');
-    setResults(null);
-    setError(null);
-  };
-
-  const downloadResults = () => {
-    if (!results) return;
-
-    // Create downloadable content
-    const content = `
-# ${results.info.title}
-
-**Author:** ${results.info.author}
-**Duration:** ${results.info.duration}
-**Views:** ${results.info.views.toLocaleString()}
-
-## Summary
-${results.content.summary}
-
-## Main Points
-${results.content.main_points.map((point: string) => `• ${point}`).join('\n')}
-
-## Key Concepts
-${results.content.key_concepts.map((concept: string) => `• ${concept}`).join('\n')}
-
-## Study Guide
-${results.content.study_guide}
-
-## Vocabulary
-${results.content.vocabulary.map((item: string) => `• ${item}`).join('\n')}
-
-## Analysis
-${results.content.analysis}
-`;
-
-    const blob = new Blob([content], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${results.info.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_analysis.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const formatText = (text: string) => {
-    return text.split('\n').map((line, index) => (
-      <p key={index} className="mb-2 last:mb-0">{line}</p>
-    ));
-  };
-
-  const tabs = [
-    { id: 'summary', label: 'Summary', icon: FileText },
-    { id: 'points', label: 'Key Points', icon: List },
-    { id: 'concepts', label: 'Concepts', icon: Lightbulb },
-    { id: 'study', label: 'Study Guide', icon: Book },
-    { id: 'vocab', label: 'Vocabulary', icon: SpellCheck },
-    { id: 'analysis', label: 'Analysis', icon: BarChart3 },
+  const stats = [
+    { value: "100%", label: "AI-Powered" },
+    { value: "24/7", label: "Available" },
+    { value: "∞", label: "Learning Potential" },
+    { value: "0", label: "Limits" }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Header */}
-        <header className="text-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-3 bg-blue-600 rounded-full">
-              <Brain className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-              Mercurious AI
-            </h1>
-          </div>
-          <p className="text-xl text-gray-600 dark:text-gray-300 font-medium">
-            AI-Powered Video Learning Assistant
-          </p>
-        </header>
-
-        {/* Video Processing Section */}
-        <main>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8">
-            <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3 text-gray-900 dark:text-white">
-              <Video className="w-6 h-6 text-blue-600" />
-              Process YouTube Video
-            </h2>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="flex gap-4 flex-col sm:flex-row">
-                <input
-                  type="url"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  placeholder="Paste YouTube URL here..."
-                  required
-                  disabled={isLoading}
-                  className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-                <button
-                  type="submit"
-                  disabled={isLoading || !videoUrl.trim()}
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-lg transition-colors flex items-center gap-2 min-w-fit disabled:cursor-not-allowed"
-                >
-                  {isLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Play className="w-5 h-5" />
-                  )}
-                  {isLoading ? 'Processing...' : 'Process Video'}
-                </button>
+    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50">
+      {/* Navigation */}
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-purple-200/50 shadow-lg shadow-purple-100/50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <div className="p-2 bg-gradient-to-r from-purple-600 to-fuchsia-600 rounded-xl shadow-lg">
+                <Brain className="w-6 h-6 text-white" />
               </div>
-            </form>
+              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
+                Mercurious AI
+              </span>
+            </Link>
+
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center gap-3">
+              <button className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors flex items-center gap-2">
+                <LogIn className="w-4 h-4" />
+                Login
+              </button>
+              <button className="px-4 py-2 bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center gap-2 shadow-lg">
+                <UserPlus className="w-4 h-4" />
+                Sign Up
+              </button>
+              <Link 
+                href="/process"
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center gap-2 shadow-lg"
+              >
+                Get Started
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="lg:hidden">
+              <button
+                onClick={toggleMobileMenu}
+                className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200 transition-colors"
+              >
+                {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
 
-          {/* Loading State */}
-          {isLoading && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-lg text-gray-700 dark:text-gray-300">
-                  Processing video... This may take a moment
+          {/* Mobile Menu */}
+          {isMobileMenuOpen && (
+            <div className="lg:hidden mt-4 pb-4 border-t border-purple-200 pt-4">
+              <div className="flex flex-col space-y-3">
+                <button className="w-full px-4 py-2 text-left text-gray-700 hover:text-purple-600 font-medium transition-colors flex items-center gap-2">
+                  <LogIn className="w-4 h-4" />
+                  Login
+                </button>
+                <button className="w-full px-4 py-2 bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700 text-white rounded-lg font-medium transition-all duration-300 flex items-center gap-2 shadow-lg justify-center">
+                  <UserPlus className="w-4 h-4" />
+                  Sign Up
+                </button>
+                <Link 
+                  href="/process"
+                  className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-lg font-medium transition-all duration-300 flex items-center gap-2 shadow-lg justify-center"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Get Started
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="py-12 sm:py-16 lg:py-20">
+        <div className="container mx-auto px-4 text-center">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-purple-600 animate-pulse" />
+              <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold bg-gradient-to-r from-purple-600 via-fuchsia-600 to-violet-600 bg-clip-text text-transparent">
+                Mercurious AI
+              </h1>
+              <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-fuchsia-600 animate-pulse" />
+            </div>
+            <p className="text-lg sm:text-2xl lg:text-3xl text-gray-800 mb-4 font-light">
+              Your AI Learning Assistant 🎓
+            </p>
+            <p className="text-base sm:text-lg lg:text-xl text-gray-700 mb-8 lg:mb-12 max-w-3xl mx-auto leading-relaxed px-4">
+              An intelligent learning platform that transforms YouTube videos into interactive learning experiences using cutting-edge AI technology.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 lg:mb-16 px-4">
+              <Link 
+                href="/process"
+                className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700 text-white text-base sm:text-lg font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-3 shadow-xl"
+              >
+                <Video className="w-5 sm:w-6 h-5 sm:h-6" />
+                Process Your First Video
+              </Link>
+              <button className="px-6 sm:px-8 py-3 sm:py-4 border-2 border-purple-400 text-purple-800 hover:border-fuchsia-500 hover:text-fuchsia-600 text-base sm:text-lg font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-3">
+                <BookOpen className="w-5 sm:w-6 h-5 sm:h-6" />
+                Learn More
+              </button>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 mb-12 lg:mb-16 px-4">
+              {stats.map((stat, index) => (
+                <div key={index} className="text-center group">
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-600 to-fuchsia-600 bg-clip-text text-transparent mb-2 group-hover:scale-110 transition-transform">
+                    {stat.value}
+                  </div>
+                  <div className="text-sm sm:text-base text-gray-700 font-medium">
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-12 sm:py-16 lg:py-20 bg-white/70 backdrop-blur-sm">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12 lg:mb-16">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              Powerful Features
+            </h2>
+            <p className="text-lg sm:text-xl text-gray-700 max-w-3xl mx-auto px-4">
+              Everything you need to transform your learning experience with AI-powered tools and insights.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            {features.map((feature, index) => (
+              <div 
+                key={index}
+                className="group p-6 lg:p-8 bg-white backdrop-blur-sm rounded-2xl hover:bg-purple-50 transition-all duration-300 transform hover:scale-105 border border-purple-200 hover:border-fuchsia-300 shadow-lg hover:shadow-xl hover:shadow-purple-200/50"
+              >
+                <div className={`p-3 bg-gradient-to-r ${feature.color} rounded-xl w-fit mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
+                  <feature.icon className="w-5 sm:w-6 h-5 sm:h-6 text-white" />
+                </div>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
+                  {feature.title}
+                </h3>
+                <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
+                  {feature.description}
                 </p>
               </div>
-              
-              <div className="space-y-4">
-                {[
-                  { id: 'fetch', icon: Download, text: 'Fetching video info...' },
-                  { id: 'transcript', icon: FileText, text: 'Extracting transcript...' },
-                  { id: 'ai', icon: Brain, text: 'AI processing content...' }
-                ].map((step) => (
-                  <div
-                    key={step.id}
-                    className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                      currentStep === step.id
-                        ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                        : currentStep && ['fetch', 'transcript', 'ai'].indexOf(currentStep) > ['fetch', 'transcript', 'ai'].indexOf(step.id)
-                        ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
-                    }`}
-                  >
-                    <step.icon className="w-5 h-5" />
-                    <span>{step.text}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Error Display */}
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-8 mb-8">
-              <div className="text-center">
-                <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-red-800 dark:text-red-400 mb-2">
-                  Error Processing Video
-                </h3>
-                <p className="text-red-600 dark:text-red-300 mb-4">{error}</p>
-                <button
-                  onClick={clearError}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-                >
-                  Try Again
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Results Section */}
-          {results && (
-            <div className="space-y-8">
-              {/* Video Info Card */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6">
-                <div className="flex gap-6 flex-col sm:flex-row">
-                  <img
-                    src={results.info.thumbnail_url}
-                    alt="Video thumbnail"
-                    className="w-full sm:w-48 h-32 object-cover rounded-lg"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/api/placeholder/320/180';
-                    }}
-                  />
-                  <div className="flex-1">
-                    <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
-                      {results.info.title}
-                    </h2>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      {results.info.author} • {results.info.duration} • {results.info.views.toLocaleString()} views
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Content Tabs */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
-                <div className="border-b border-gray-200 dark:border-gray-700">
-                  <nav className="flex overflow-x-auto">
-                    {tabs.map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id as ActiveTab)}
-                        className={`flex items-center gap-2 px-6 py-4 font-medium text-sm whitespace-nowrap transition-colors ${
-                          activeTab === tab.id
-                            ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-                            : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                        }`}
-                      >
-                        <tab.icon className="w-4 h-4" />
-                        {tab.label}
-                      </button>
-                    ))}
-                  </nav>
-                </div>
-
-                <div className="p-6">
-                  {activeTab === 'summary' && (
-                    <div>
-                      <h3 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
-                        <FileText className="w-5 h-5" />
-                        Video Summary
-                      </h3>
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                        <div className="text-gray-700 dark:text-gray-300">
-                          {formatText(results.content.summary)}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeTab === 'points' && (
-                    <div>
-                      <h3 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
-                        <List className="w-5 h-5" />
-                        Main Points
-                      </h3>
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                        <ul className="space-y-2">
-                          {results.content.main_points.map((point: string, index: number) => (
-                            <li key={index} className="flex items-start gap-2 text-gray-700 dark:text-gray-300">
-                              <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
-                              {point}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+            ))}
+          </div>
         </div>
-                  )}
+      </section>
 
-                  {activeTab === 'concepts' && (
-                    <div>
-                      <h3 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
-                        <Lightbulb className="w-5 h-5" />
-                        Key Concepts
-                      </h3>
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                        <div className="flex flex-wrap gap-2">
-                          {results.content.key_concepts.map((concept: string, index: number) => (
-                            <span
-                              key={index}
-                              className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm"
-                            >
-                              {concept}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
+      {/* How It Works */}
+      <section className="py-12 sm:py-16 lg:py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12 lg:mb-16">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              How It Works
+            </h2>
+            <p className="text-lg sm:text-xl text-gray-700 max-w-3xl mx-auto px-4">
+              Three simple steps to transform any YouTube video into a comprehensive learning experience.
+            </p>
+          </div>
 
-                  {activeTab === 'study' && (
-                    <div>
-                      <h3 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
-                        <Book className="w-5 h-5" />
-                        Study Guide
-                      </h3>
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                        <div className="text-gray-700 dark:text-gray-300 font-sans">
-                          {formatText(results.content.study_guide)}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeTab === 'vocab' && (
-                    <div>
-                      <h3 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
-                        <SpellCheck className="w-5 h-5" />
-                        Vocabulary
-                      </h3>
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                        <ul className="space-y-3">
-                          {results.content.vocabulary.map((item: string, index: number) => (
-                            <li key={index} className="text-gray-700 dark:text-gray-300">
-                              <span className="w-2 h-2 bg-blue-500 rounded-full inline-block mr-2"></span>
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeTab === 'analysis' && (
-                    <div>
-                      <h3 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
-                        <BarChart3 className="w-5 h-5" />
-                        Analysis
-                      </h3>
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                        <div className="text-gray-700 dark:text-gray-300">
-                          {formatText(results.content.analysis)}
-                        </div>
-                      </div>
-                    </div>
-                  )}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-8 max-w-5xl mx-auto">
+            {[
+              {
+                step: "01",
+                title: "Paste YouTube URL",
+                description: "Simply paste any YouTube video URL into our processor",
+                icon: Video,
+                color: "from-red-500 to-pink-600"
+              },
+              {
+                step: "02", 
+                title: "AI Analysis",
+                description: "Our AI extracts transcripts and analyzes content using advanced algorithms",
+                icon: Brain,
+                color: "from-purple-500 to-fuchsia-600"
+              },
+              {
+                step: "03",
+                title: "Learn & Engage",
+                description: "Access summaries, quizzes, study guides, and interactive chat",
+                icon: BookOpen,
+                color: "from-violet-500 to-purple-600"
+              }
+            ].map((item, index) => (
+              <div key={index} className="text-center relative">
+                <div className="relative z-10">
+                  <div className={`w-16 sm:w-20 h-16 sm:h-20 bg-gradient-to-r ${item.color} rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl`}>
+                    <item.icon className="w-8 sm:w-10 h-8 sm:h-10 text-white" />
+                  </div>
+                  <div className="text-sm font-bold text-fuchsia-600 mb-2">STEP {item.step}</div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm sm:text-base text-gray-700 leading-relaxed px-4">
+                    {item.description}
+                  </p>
                 </div>
+                {index < 2 && (
+                  <div className="hidden lg:block absolute top-8 sm:top-10 left-full w-full z-0">
+                    <ArrowRight className="w-6 sm:w-8 h-6 sm:h-8 text-fuchsia-400 mx-auto" />
+                  </div>
+                )}
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-              {/* Action Buttons */}
-              <div className="flex gap-4 justify-center flex-col sm:flex-row">
-                <button
-                  onClick={downloadResults}
-                  className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2 justify-center"
+      {/* CTA Section */}
+      <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-violet-700 relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+              Ready to Transform Your Learning?
+            </h2>
+            <p className="text-lg sm:text-xl text-purple-100 mb-8 lg:mb-12 max-w-2xl mx-auto px-4">
+              Join thousands of learners who are already using Mercurious AI to accelerate their education and achieve their goals.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
+              <Link 
+                href="/process"
+                className="px-6 sm:px-8 py-3 sm:py-4 bg-white text-purple-600 hover:bg-gray-100 text-base sm:text-lg font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-3 shadow-xl"
+              >
+                <Sparkles className="w-5 sm:w-6 h-5 sm:h-6" />
+                Start Learning Now
+              </Link>
+              <button className="px-6 sm:px-8 py-3 sm:py-4 border-2 border-white text-white hover:bg-white hover:text-purple-600 text-base sm:text-lg font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-3">
+                <Users className="w-5 sm:w-6 h-5 sm:h-6" />
+                Join Community
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-8 lg:py-12 bg-gray-900 relative">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="sm:col-span-2 lg:col-span-2">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-gradient-to-r from-purple-600 to-fuchsia-600 rounded-lg">
+                  <Brain className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-xl font-bold text-white">
+                  Mercurious AI
+                </span>
+              </div>
+              <p className="text-gray-400 leading-relaxed mb-6 max-w-md">
+                Transforming education through intelligent AI-powered learning experiences. 
+                Built with cutting-edge technology and designed for learners of all levels.
+              </p>
+              <div className="flex gap-4">
+                <a 
+                  href="https://github.com/mrnithesh/Mercurious.ai" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="p-2 bg-gray-800 hover:bg-purple-600 rounded-lg transition-colors"
                 >
-                  <Download className="w-5 h-5" />
-                  Download Results
-                </button>
-                <button
-                  onClick={processNewVideo}
-                  className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2 justify-center"
+                  <Github className="w-5 h-5 text-gray-400 hover:text-white" />
+                </a>
+                <a 
+                  href="https://www.linkedin.com/in/mrnithesh/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="p-2 bg-gray-800 hover:bg-fuchsia-600 rounded-lg transition-colors"
                 >
-                  <Plus className="w-5 h-5" />
-                  Process Another Video
-                </button>
+                  <Linkedin className="w-5 h-5 text-gray-400 hover:text-white" />
+                </a>
+                <a 
+                  href="mailto:mr.nithesh.k@gmail.com"
+                  className="p-2 bg-gray-800 hover:bg-violet-600 rounded-lg transition-colors"
+                >
+                  <Mail className="w-5 h-5 text-gray-400 hover:text-white" />
+                </a>
               </div>
             </div>
-          )}
-        </main>
-      </div>
+
+            <div>
+              <h3 className="text-white font-semibold mb-4">Features</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li><Link href="/process" className="hover:text-purple-400 transition-colors text-sm sm:text-base">Video Processing</Link></li>
+                <li><a href="#" className="hover:text-purple-400 transition-colors text-sm sm:text-base">AI Chat</a></li>
+                <li><a href="#" className="hover:text-purple-400 transition-colors text-sm sm:text-base">Quiz Generation</a></li>
+                <li><a href="#" className="hover:text-purple-400 transition-colors text-sm sm:text-base">Study Guides</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="text-white font-semibold mb-4">Support</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="#" className="hover:text-purple-400 transition-colors text-sm sm:text-base">Documentation</a></li>
+                <li><a href="#" className="hover:text-purple-400 transition-colors text-sm sm:text-base">Help Center</a></li>
+                <li><a href="#" className="hover:text-purple-400 transition-colors text-sm sm:text-base">Contact</a></li>
+                <li><a href="#" className="hover:text-purple-400 transition-colors text-sm sm:text-base">Privacy Policy</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t border-gray-800 mt-8 lg:mt-12 pt-6 lg:pt-8 text-center">
+            <p className="text-gray-400 text-sm sm:text-base">
+              © 2024 Mercurious AI. Built with ❤️ for learners everywhere.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
