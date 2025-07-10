@@ -148,7 +148,7 @@ class TranscriptService:
     async def _extract_key_concepts(self, transcript: str) -> List[str]:
         #extract key concepts from the transcript
         try:
-            prompt = f"""Extract key concepts, terms, and important topics from the following transcript. 
+            prompt = f"""Extract key concepts, terms, and important topics from the following transcript. Extract only the main 5 topics only.
             Return each concept on a new line:
             
             {transcript[:4000]}"""

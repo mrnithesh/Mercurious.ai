@@ -20,6 +20,8 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { apiClient, VideoResponse } from '@/lib/api';
+import ChatAssistant from '@/components/ChatAssistant';
+import ClientOnlyWrapper from '@/components/ClientOnlyWrapper';
 
 type ProcessingStep = 'fetch' | 'transcript' | 'ai';
 type ActiveTab = 'summary' | 'points' | 'concepts' | 'study' | 'vocab' | 'analysis';
@@ -456,6 +458,23 @@ ${results.content.analysis}
           )}
         </main>
       </div>
+
+      {/* Chat Assistant - only show when video is processed */}
+      {results && (
+        <ClientOnlyWrapper>
+          <ChatAssistant 
+            videoId={results.video_id} 
+            videoContext={{
+              title: results.info.title,
+              author: results.info.author,
+              duration: results.info.duration,
+              summary: results.content.summary,
+              main_points: results.content.main_points,
+              key_concepts: results.content.key_concepts
+            }} 
+          />
+        </ClientOnlyWrapper>
+      )}
     </div>
   );
 } 
