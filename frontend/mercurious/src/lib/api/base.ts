@@ -1,3 +1,5 @@
+import { getCurrentUserToken } from '../firebase/auth';
+
 export interface APIError {
   detail: string;
 }
@@ -19,6 +21,18 @@ export class BaseAPIClient {
       'Accept': 'application/json',
     };
 
+    // Add authentication token if available (client-side only)
+    if (typeof window !== 'undefined') {
+      try {
+        const token = await getCurrentUserToken();
+        if (token) {
+          defaultHeaders['Authorization'] = `Bearer ${token}`;
+        }
+      } catch (error) {
+        console.warn('Failed to get authentication token:', error);
+      }
+    }
+
     const response = await fetch(url, {
       headers: { ...defaultHeaders, ...options.headers },
       ...options,
@@ -32,6 +46,12 @@ export class BaseAPIClient {
       } catch {
         // If JSON parsing fails, use the default error message
       }
+      
+      // Handle authentication errors
+      if (response.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      }
+      
       throw new Error(errorMessage);
     }
 
@@ -51,6 +71,22 @@ export class BaseAPIClient {
   protected async makeGetRequest<T>(endpoint: string): Promise<T> {
     return this.makeRequest<T>(endpoint, {
       method: 'GET',
+    });
+  }
+
+  protected async makePutRequest<T>(
+    endpoint: string,
+    data: any
+  ): Promise<T> {
+    return this.makeRequest<T>(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  protected async makeDeleteRequest<T>(endpoint: string): Promise<T> {
+    return this.makeRequest<T>(endpoint, {
+      method: 'DELETE',
     });
   }
 

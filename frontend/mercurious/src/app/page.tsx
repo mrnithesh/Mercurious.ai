@@ -23,12 +23,32 @@ import {
   X
 } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { LoginModal, RegisterModal, UserMenu } from '@/components/Auth';
 
 export default function Home() {
+  const { user, loading } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const openLoginModal = () => {
+    setIsLoginModalOpen(true);
+    setIsRegisterModalOpen(false);
+  };
+
+  const openRegisterModal = () => {
+    setIsRegisterModalOpen(true);
+    setIsLoginModalOpen(false);
+  };
+
+  const closeModals = () => {
+    setIsLoginModalOpen(false);
+    setIsRegisterModalOpen(false);
   };
 
   const features = [
@@ -107,21 +127,46 @@ export default function Home() {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-3">
-              <button className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors flex items-center gap-2">
-                <LogIn className="w-4 h-4" />
-                Login
-              </button>
-              <button className="px-4 py-2 bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center gap-2 shadow-lg">
-                <UserPlus className="w-4 h-4" />
-                Sign Up
-              </button>
-              <Link 
-                href="/process"
-                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center gap-2 shadow-lg"
-              >
-                Get Started
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+              {!loading && (
+                <>
+                  {user ? (
+                    <>
+                      <UserMenu />
+                      <Link 
+                        href="/process"
+                        className="px-4 py-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center gap-2 shadow-lg"
+                      >
+                        Get Started
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <button 
+                        onClick={openLoginModal}
+                        className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors flex items-center gap-2"
+                      >
+                        <LogIn className="w-4 h-4" />
+                        Login
+                      </button>
+                      <button 
+                        onClick={openRegisterModal}
+                        className="px-4 py-2 bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center gap-2 shadow-lg"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        Sign Up
+                      </button>
+                      <Link 
+                        href="/process"
+                        className="px-4 py-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center gap-2 shadow-lg"
+                      >
+                        Get Started
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -139,22 +184,56 @@ export default function Home() {
           {isMobileMenuOpen && (
             <div className="lg:hidden mt-4 pb-4 border-t border-purple-200 pt-4">
               <div className="flex flex-col space-y-3">
-                <button className="w-full px-4 py-2 text-left text-gray-700 hover:text-purple-600 font-medium transition-colors flex items-center gap-2">
-                  <LogIn className="w-4 h-4" />
-                  Login
-                </button>
-                <button className="w-full px-4 py-2 bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700 text-white rounded-lg font-medium transition-all duration-300 flex items-center gap-2 shadow-lg justify-center">
-                  <UserPlus className="w-4 h-4" />
-                  Sign Up
-                </button>
-                <Link 
-                  href="/process"
-                  className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-lg font-medium transition-all duration-300 flex items-center gap-2 shadow-lg justify-center"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Get Started
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+                {!loading && (
+                  <>
+                    {user ? (
+                      <>
+                        <div className="px-4 py-2">
+                          <UserMenu />
+                        </div>
+                        <Link 
+                          href="/process"
+                          className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-lg font-medium transition-all duration-300 flex items-center gap-2 shadow-lg justify-center"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          Get Started
+                          <ArrowRight className="w-4 h-4" />
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <button 
+                          onClick={() => {
+                            openLoginModal();
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="w-full px-4 py-2 text-left text-gray-700 hover:text-purple-600 font-medium transition-colors flex items-center gap-2"
+                        >
+                          <LogIn className="w-4 h-4" />
+                          Login
+                        </button>
+                        <button 
+                          onClick={() => {
+                            openRegisterModal();
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="w-full px-4 py-2 bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700 text-white rounded-lg font-medium transition-all duration-300 flex items-center gap-2 shadow-lg justify-center"
+                        >
+                          <UserPlus className="w-4 h-4" />
+                          Sign Up
+                        </button>
+                        <Link 
+                          href="/process"
+                          className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-lg font-medium transition-all duration-300 flex items-center gap-2 shadow-lg justify-center"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          Get Started
+                          <ArrowRight className="w-4 h-4" />
+                        </Link>
+                      </>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -402,6 +481,18 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Authentication Modals */}
+      <LoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={closeModals} 
+        onSwitchToRegister={openRegisterModal} 
+      />
+      <RegisterModal 
+        isOpen={isRegisterModalOpen} 
+        onClose={closeModals} 
+        onSwitchToLogin={openLoginModal} 
+      />
     </div>
   );
 }

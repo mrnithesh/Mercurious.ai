@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ClientOnly } from "@/components/ClientOnly";
 
 export const metadata: Metadata = {
   title: "Mercurious AI - Your AI Learning Assistant",
@@ -17,7 +19,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased">
-        {children}
+        <ClientOnly>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </ClientOnly>
       </body>
     </html>
   );

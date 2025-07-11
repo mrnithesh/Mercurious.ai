@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from typing import Dict, Any, Optional
 from ..models.chat import ChatRequest, ChatResponse, ChatHistory, ChatClearRequest
 from ..services.chat_service import ChatService
+from ..dependencies import get_current_user
 
 
 app = APIRouter()
@@ -12,7 +13,7 @@ video_contexts: Dict[str, Dict[str, Any]] = {}
 
 
 @app.post("/api/chat/send", response_model=ChatResponse)
-async def send_chat_message(request: ChatRequest):
+async def send_chat_message(request: ChatRequest, current_user: dict = Depends(get_current_user)):
     # Send a message to the chat assistant
     try:
         # Get video context if available
@@ -25,7 +26,7 @@ async def send_chat_message(request: ChatRequest):
 
 
 @app.get("/api/chat/history/{video_id}", response_model=ChatHistory)
-async def get_chat_history(video_id: str):
+async def get_chat_history(video_id: str, current_user: dict = Depends(get_current_user)):
     # Get chat history for a specific video
     try:
         history = await chat_service.get_chat_history(video_id)
@@ -35,7 +36,7 @@ async def get_chat_history(video_id: str):
 
 
 @app.post("/api/chat/clear")
-async def clear_chat_history(request: ChatClearRequest):
+async def clear_chat_history(request: ChatClearRequest, current_user: dict = Depends(get_current_user)):
     # Clear chat history for a specific video
     try:
         success = await chat_service.clear_chat_history(request.video_id)
@@ -45,7 +46,7 @@ async def clear_chat_history(request: ChatClearRequest):
 
 
 @app.post("/api/chat/context/{video_id}")
-async def set_video_context(video_id: str, context: Dict[str, Any]):
+async def set_video_context(video_id: str, context: Dict[str, Any], current_user: dict = Depends(get_current_user)):
     # Set video context for better chat responses
     try:
         video_contexts[video_id] = context
@@ -55,7 +56,7 @@ async def set_video_context(video_id: str, context: Dict[str, Any]):
 
 
 @app.get("/api/chat/context/{video_id}")
-async def get_video_context(video_id: str):
+async def get_video_context(video_id: str, current_user: dict = Depends(get_current_user)):
     # Get video context for a specific video
     try:
         context = video_contexts.get(video_id, {})

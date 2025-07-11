@@ -4,3 +4,7 @@ pydantic[all]
 python-dotenv
 youtube-transcript-api
 uvicorn
+firebase-admin
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart

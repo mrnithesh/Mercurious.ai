@@ -22,6 +22,7 @@ import {
 import { apiClient, VideoResponse } from '@/lib/api';
 import ChatAssistant from '@/components/ChatAssistant';
 import ClientOnlyWrapper from '@/components/ClientOnlyWrapper';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 type ProcessingStep = 'fetch' | 'transcript' | 'ai';
 type ActiveTab = 'summary' | 'points' | 'concepts' | 'study' | 'vocab' | 'analysis';
@@ -139,7 +140,8 @@ ${results.content.analysis}
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50">
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-purple-200/50 shadow-lg shadow-purple-100/50">
         <div className="container mx-auto px-4 py-4">
@@ -476,5 +478,6 @@ ${results.content.analysis}
         </ClientOnlyWrapper>
       )}
     </div>
+    </ProtectedRoute>
   );
 } 

@@ -1,15 +1,18 @@
 import { BaseAPIClient } from './base';
 import { VideoAPIService } from './services/video';
 import { ChatAPIService } from './services/chat';
+import { AuthAPIService } from './services/auth';
 
 export class APIClient extends BaseAPIClient {
   public readonly video: VideoAPIService;
   public readonly chat: ChatAPIService;
+  public readonly auth: AuthAPIService;
 
   constructor(baseURL?: string) {
     super(baseURL);
     this.video = new VideoAPIService(baseURL);
     this.chat = new ChatAPIService(baseURL);
+    this.auth = new AuthAPIService(baseURL);
   }
 
   // Legacy methods for backward compatibility
