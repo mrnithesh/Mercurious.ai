@@ -131,12 +131,24 @@ export default function Home() {
                 <>
                   {user ? (
                     <>
+                      <Link 
+                        href="/dashboard"
+                        className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors flex items-center gap-2"
+                      >
+                        Dashboard
+                      </Link>
+                      <Link 
+                        href="/library"
+                        className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors flex items-center gap-2"
+                      >
+                        Library
+                      </Link>
                       <UserMenu />
                       <Link 
                         href="/process"
                         className="px-4 py-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center gap-2 shadow-lg"
                       >
-                        Get Started
+                        Process Video
                         <ArrowRight className="w-4 h-4" />
                       </Link>
                     </>
@@ -188,6 +200,20 @@ export default function Home() {
                   <>
                     {user ? (
                       <>
+                        <Link 
+                          href="/dashboard"
+                          className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors flex items-center gap-2"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          Dashboard
+                        </Link>
+                        <Link 
+                          href="/library"
+                          className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors flex items-center gap-2"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          Library
+                        </Link>
                         <div className="px-4 py-2">
                           <UserMenu />
                         </div>
@@ -196,7 +222,7 @@ export default function Home() {
                           className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-lg font-medium transition-all duration-300 flex items-center gap-2 shadow-lg justify-center"
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
-                          Get Started
+                          Process Video
                           <ArrowRight className="w-4 h-4" />
                         </Link>
                       </>
