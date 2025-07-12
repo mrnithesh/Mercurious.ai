@@ -18,6 +18,3 @@ class ChatResponse(BaseModel):
 class ChatHistory(BaseModel):
     video_id: str
     messages: List[ChatMessage]
-
-class ChatClearRequest(BaseModel):
-    video_id: str

@@ -10,13 +10,13 @@ export class ChatAPIService extends BaseAPIClient {
     return this.makeGetRequest<ChatHistory>(`/api/chat/history/${videoId}`);
   }
 
-  async clearHistory(videoId: string): Promise<{ success: boolean; message: string }> {
-    return this.makePostRequest<{ success: boolean; message: string }>('/api/chat/clear', { 
-      video_id: videoId 
-    });
+  async clearHistory(videoId: string): Promise<{ message: string }> {
+    return this.makeDeleteRequest<{ message: string }>(`/api/chat/history/${videoId}`);
   }
 
+  // Video context is now handled automatically by the backend
   async setVideoContext(videoId: string, context: any): Promise<{ success: boolean; message: string }> {
-    return this.makePostRequest<{ success: boolean; message: string }>(`/api/chat/context/${videoId}`, context);
+    // No-op: Backend now gets context automatically from global video collection
+    return Promise.resolve({ success: true, message: "Context set automatically" });
   }
 } 

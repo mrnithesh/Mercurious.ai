@@ -8,7 +8,11 @@ from fastapi import HTTPException
 from dotenv import load_dotenv
 from pydantic import HttpUrl
 from .transcript_services import TranscriptService
-from ..models.video import VideoInfo, VideoContent, VideoResponse
+from .video_database_service import VideoDatabase
+from ..models.video import (
+    VideoInfo, VideoContent, VideoResponse, GlobalVideo, 
+    VideoMetadata, UserVideoMetadata
+)
 load_dotenv()
 
 class VideoService:
@@ -16,6 +20,7 @@ class VideoService:
         self.max_retries = 3
         self.retry_delay = 2
         self.supported_domains = ['youtube.com', 'youtu.be']
+        self.video_db = VideoDatabase()
 
     async def extract_video_id(self, url: HttpUrl) -> str:
         """Extract video ID from YouTube URL."""
@@ -90,7 +95,49 @@ class VideoService:
             return formatted_duration.strip()
         return duration
 
-    async def process_video(self, video_url: HttpUrl) -> VideoResponse:
+    async def process_video(self, video_url: HttpUrl, user_id: str) -> VideoResponse:
+        """Enhanced video processing with global video storage and user library management"""
+        try:
+            # Extract video ID
+            video_id = await self.extract_video_id(video_url)
+            
+            # Check if video already exists globally
+            global_video = await self.video_db.get_global_video(video_id)
+            
+            if global_video:
+                # Video already processed - check if it's in user's library
+                is_in_library = await self.video_db.check_video_in_user_library(user_id, video_id)
+                
+                if not is_in_library:
+                    # Add to user's library
+                    await self.video_db.add_video_to_user_library(user_id, video_id)
+                
+                # Update access statistics
+                await self.video_db.update_global_video_access(video_id)
+                
+                # Return combined response
+                return await self.video_db.get_combined_video_response(user_id, video_id)
+            
+            else:
+                # New video - process it
+                processed_video = await self._process_new_video(video_url)
+                
+                # Save to global collection
+                await self.video_db.save_global_video(processed_video)
+                
+                # Add to user's library
+                await self.video_db.add_video_to_user_library(user_id, video_id)
+                
+                # Return combined response
+                return await self.video_db.get_combined_video_response(user_id, video_id)
+                
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error processing video: {str(e)}")
+
+    async def _process_new_video(self, video_url: HttpUrl) -> GlobalVideo:
+        """Process a new video (private method)"""
         try:
             # Get video info
             video_info_dict = await self.fetch_video_info(video_url)
@@ -131,17 +178,47 @@ class VideoService:
                 vocabulary=processed_content.get("vocabulary", [])
             )
 
-            # Return proper VideoResponse model
-            return VideoResponse(
+            # Create metadata
+            video_metadata = VideoMetadata(
+                created_at=datetime.now(),
+                processed_count=1,
+                last_accessed=datetime.now()
+            )
+
+            # Return GlobalVideo model
+            return GlobalVideo(
                 video_id=video_id,
                 info=video_info,
                 content=video_content,
-                progress=0.0,
-                created_at=datetime.now(),
-                last_watched=None
+                metadata=video_metadata
             )
 
         except HTTPException:
             raise
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error processing video: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Error processing new video: {str(e)}")
+
+    # Library management methods
+    async def get_user_library(self, user_id: str, limit: int = 50):
+        """Get user's video library"""
+        return await self.video_db.get_user_library(user_id, limit)
+
+    async def get_user_video(self, user_id: str, video_id: str):
+        """Get specific video from user's library"""
+        return await self.video_db.get_combined_video_response(user_id, video_id)
+
+    async def remove_video_from_library(self, user_id: str, video_id: str):
+        """Remove video from user's library"""
+        return await self.video_db.remove_video_from_user_library(user_id, video_id)
+
+    async def update_video_progress(self, user_id: str, video_id: str, progress: float):
+        """Update user's video progress"""
+        return await self.video_db.update_user_video_progress(user_id, video_id, progress)
+
+    async def toggle_video_favorite(self, user_id: str, video_id: str, is_favorite: bool):
+        """Toggle video favorite status"""
+        return await self.video_db.update_user_video_favorite(user_id, video_id, is_favorite)
+
+    async def update_video_notes(self, user_id: str, video_id: str, notes: str):
+        """Update user's video notes"""
+        return await self.video_db.update_user_video_notes(user_id, video_id, notes)

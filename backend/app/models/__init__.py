@@ -15,7 +15,14 @@ from .video import (
     VideoContent,
     VideoResponse,
     VideoProgressUpdate,
-    VideoNotes
+    VideoNotes,
+    VideoMetadata,
+    GlobalVideo,
+    UserVideoMetadata,
+    UserVideoReference,
+    VideoLibraryItem,
+    VideoFavoriteUpdate,
+    VideoNotesUpdate
 )
 
 # Chat models
@@ -23,8 +30,7 @@ from .chat import (
     ChatMessage,
     ChatRequest,
     ChatResponse,
-    ChatHistory,
-    ChatClearRequest
+    ChatHistory
 )
 
 # Quiz models
@@ -43,9 +49,11 @@ __all__ = [
     "UserBase", "UserCreate", "UserResponse", "UserLogin", "UserUpdate", "UserSettings",
     # Video
     "VideoProcessRequest", "VideoInfo", "VideoContent", "VideoResponse", 
-    "VideoProgressUpdate", "VideoNotes",
+    "VideoProgressUpdate", "VideoNotes", "VideoMetadata", "GlobalVideo",
+    "UserVideoMetadata", "UserVideoReference", "VideoLibraryItem",
+    "VideoFavoriteUpdate", "VideoNotesUpdate",
     # Chat
-    "ChatMessage", "ChatRequest", "ChatResponse", "ChatHistory", "ChatClearRequest",
+    "ChatMessage", "ChatRequest", "ChatResponse", "ChatHistory",
     # Quiz
     "QuizQuestion", "QuizGenerateRequest", "QuizResponse", "QuizAnswer", 
     "QuizSubmission", "QuizResult", "QuizResultResponse"
