@@ -12,9 +12,7 @@ class AuthService:
         self.db = firebase_config.get_firestore()
     
     async def create_user(self, user_data: UserCreate) -> UserResponse:
-        """
-        Create a new user with Firebase Auth and store additional data in Firestore
-        """
+        #Create a new user with Firebase Auth and store additional data in Firestore
         try:
             # Create user in Firebase Auth
             firebase_user = self.auth.create_user(
@@ -59,9 +57,7 @@ class AuthService:
             )
     
     async def get_user_by_uid(self, uid: str) -> Optional[UserResponse]:
-        """
-        Get user data by Firebase UID
-        """
+        #Get user data by Firebase UID
         try:
             # Get user from Firestore
             user_doc = self.db.collection('users').document(uid).get()
@@ -83,9 +79,7 @@ class AuthService:
             return None
     
     async def update_user(self, uid: str, user_update: UserUpdate) -> UserResponse:
-        """
-        Update user information
-        """
+        #Update user information
         try:
             update_data = {}
             
@@ -116,9 +110,7 @@ class AuthService:
             )
     
     async def update_last_login(self, uid: str):
-        """
-        Update user's last login timestamp
-        """
+        #Update user's last login timestamp
         try:
             self.db.collection('users').document(uid).update({
                 'last_login': datetime.utcnow()
@@ -127,9 +119,7 @@ class AuthService:
             print(f"Error updating last login: {e}")
     
     async def delete_user(self, uid: str):
-        """
-        Delete user from Firebase Auth and Firestore
-        """
+        #Delete user from Firebase Auth and Firestore
         try:
             # Delete from Firebase Auth
             self.auth.delete_user(uid)

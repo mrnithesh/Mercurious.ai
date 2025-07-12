@@ -8,9 +8,7 @@ from .models.user import UserResponse
 security = HTTPBearer()
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
-    """
-    Dependency to get current authenticated user from Firebase token
-    """
+    #Dependency to get current authenticated user from Firebase token
     try:
         # Extract token from Authorization header
         token = credentials.credentials
@@ -34,9 +32,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         )
 
 async def get_current_user_optional(credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))) -> Optional[dict]:
-    """
-    Optional dependency to get current user (for endpoints that work with or without auth)
-    """
+    #Optional dependency to get current user (for endpoints that work with or without auth)
     if not credentials:
         return None
     
@@ -48,7 +44,5 @@ async def get_current_user_optional(credentials: Optional[HTTPAuthorizationCrede
         return None
 
 def get_firestore_db():
-    """
-    Dependency to get Firestore database instance
-    """
+    #Dependency to get Firestore database instance
     return firebase_config.get_firestore() 
