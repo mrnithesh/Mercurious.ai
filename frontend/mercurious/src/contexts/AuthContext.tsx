@@ -14,6 +14,7 @@ import {
 interface AuthContextType {
   user: UserData | null;
   loading: boolean;
+  initialized: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -39,6 +40,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
 
@@ -50,11 +52,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (typeof window !== 'undefined') {
       const unsubscribe = onAuthStateChange((user) => {
         setUser(user);
+        setInitialized(true);
         setLoading(false);
       });
 
       return unsubscribe;
     } else {
+      // Server-side: set initialized but keep loading true
+      setInitialized(true);
       setLoading(false);
     }
   }, []);
@@ -104,7 +109,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const getToken = async (): Promise<string | null> => {
-    if (!isClient) return null;
+    if (!isClient || !initialized) return null;
     
     try {
       return await getCurrentUserToken();
@@ -117,6 +122,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value: AuthContextType = {
     user,
     loading,
+    initialized,
     signIn,
     signUp,
     signOut,

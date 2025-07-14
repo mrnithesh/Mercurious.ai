@@ -10,19 +10,16 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, initialized } = useAuth();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
-  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
   useEffect(() => {
-    if (!loading) {
-      setHasCheckedAuth(true);
-      if (!user) {
-        setIsLoginModalOpen(true);
-      }
+    // Only show login modal if auth is initialized and user is not authenticated
+    if (initialized && !loading && !user) {
+      setIsLoginModalOpen(true);
     }
-  }, [user, loading]);
+  }, [user, loading, initialized]);
 
   const openLoginModal = () => {
     setIsLoginModalOpen(true);
@@ -44,8 +41,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     }
   };
 
-  // Show loading spinner while checking authentication
-  if (loading || !hasCheckedAuth) {
+  // Show loading spinner while auth is not initialized or still loading
+  if (!initialized || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 flex items-center justify-center">
         <div className="text-center">
@@ -53,7 +50,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
             <Brain className="w-8 h-8 text-white" />
           </div>
           <div className="w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Checking authentication...</p>
+          <p className="text-gray-600 font-medium">
+            {!initialized ? 'Initializing authentication...' : 'Checking authentication...'}
+          </p>
         </div>
       </div>
     );

@@ -36,6 +36,7 @@ import {
 import { apiClient, VideoResponse } from '@/lib/api';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import ChatAssistant from '@/components/ChatAssistant';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface YouTubePlayerProps {
   videoId: string;
@@ -238,6 +239,7 @@ function ProgressBar({ progress, onUpdate }: ProgressBarProps) {
 export default function VideoDetail() {
   const params = useParams();
   const videoId = params.id as string;
+  const { user, initialized } = useAuth();
   
   const [video, setVideo] = useState<VideoResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -247,10 +249,11 @@ export default function VideoDetail() {
   const [isUpdatingFavorite, setIsUpdatingFavorite] = useState(false);
 
   useEffect(() => {
-    if (videoId) {
+    // Only load video when auth is initialized, user is authenticated, and videoId exists
+    if (videoId && initialized && user) {
       loadVideo();
     }
-  }, [videoId]);
+  }, [videoId, initialized, user]);
 
   const loadVideo = async () => {
     try {

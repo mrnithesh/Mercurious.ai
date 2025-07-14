@@ -6,14 +6,38 @@ export interface APIError {
 
 export class BaseAPIClient {
   protected baseURL: string;
+  private maxAuthRetries = 3;
+  private authRetryDelay = 1000; // 1 second
+  private maxRequestRetries = 2;
+  private requestRetryDelay = 500; // 500ms
 
   constructor(baseURL?: string) {
     this.baseURL = baseURL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
   }
 
-  protected async makeRequest<T>(
+  private async getAuthToken(retryCount = 0): Promise<string | null> {
+    try {
+      if (typeof window === 'undefined') return null;
+      
+      const token = await getCurrentUserToken();
+      
+      // If no token and we haven't exceeded retry limit, wait and try again
+      if (!token && retryCount < this.maxAuthRetries) {
+        await new Promise(resolve => setTimeout(resolve, this.authRetryDelay));
+        return this.getAuthToken(retryCount + 1);
+      }
+      
+      return token;
+    } catch (error) {
+      console.warn('Failed to get authentication token:', error);
+      return null;
+    }
+  }
+
+  private async makeRequestWithRetry<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    retryCount = 0
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const defaultHeaders = {
@@ -23,13 +47,9 @@ export class BaseAPIClient {
 
     // Add authentication token if available (client-side only)
     if (typeof window !== 'undefined') {
-      try {
-        const token = await getCurrentUserToken();
-        if (token) {
-          defaultHeaders['Authorization'] = `Bearer ${token}`;
-        }
-      } catch (error) {
-        console.warn('Failed to get authentication token:', error);
+      const token = await this.getAuthToken();
+      if (token) {
+        defaultHeaders['Authorization'] = `Bearer ${token}`;
       }
     }
 
@@ -47,15 +67,32 @@ export class BaseAPIClient {
         // If JSON parsing fails, use the default error message
       }
       
-      // Handle authentication errors
+      // Handle authentication errors with retry
       if (response.status === 401) {
+        if (retryCount < this.maxRequestRetries) {
+          console.warn(`Authentication failed, retrying... (${retryCount + 1}/${this.maxRequestRetries})`);
+          await new Promise(resolve => setTimeout(resolve, this.requestRetryDelay));
+          return this.makeRequestWithRetry(endpoint, options, retryCount + 1);
+        }
+        
         errorMessage = 'Authentication required. Please log in again.';
+        // Clear any cached auth state that might be stale
+        if (typeof window !== 'undefined') {
+          console.warn('Authentication failed - token may be expired');
+        }
       }
       
       throw new Error(errorMessage);
     }
 
     return response.json();
+  }
+
+  protected async makeRequest<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    return this.makeRequestWithRetry<T>(endpoint, options);
   }
 
   protected async makePostRequest<T>(

@@ -137,12 +137,7 @@ export default function Home() {
                       >
                         Dashboard
                       </Link>
-                      <Link 
-                        href="/library"
-                        className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors flex items-center gap-2"
-                      >
-                        Library
-                      </Link>
+                      
                       <UserMenu />
                       <Link 
                         href="/process"
@@ -502,7 +497,7 @@ export default function Home() {
           
           <div className="border-t border-gray-800 mt-8 lg:mt-12 pt-6 lg:pt-8 text-center">
             <p className="text-gray-400 text-sm sm:text-base">
-              © 2024 Mercurious AI. Built with ❤️ for learners everywhere.
+              © 2025 Mercurious AI. Built with ❤️ for learners everywhere by Nithesh 💖.
             </p>
           </div>
         </div>

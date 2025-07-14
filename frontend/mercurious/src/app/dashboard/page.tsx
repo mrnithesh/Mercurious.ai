@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { apiClient, VideoLibraryItem } from '@/lib/api';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Helper function to calculate stats from video library
 function calculateStats(videos: VideoLibraryItem[]) {
@@ -465,6 +466,7 @@ const VirtualizedVideoGrid = memo(function VirtualizedVideoGrid({
 });
 
 export default function UnifiedDashboard() {
+  const { user, initialized } = useAuth();
   const [videos, setVideos] = useState<VideoLibraryItem[]>([]);
   const [filteredVideos, setFilteredVideos] = useState<VideoLibraryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -474,8 +476,11 @@ export default function UnifiedDashboard() {
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title' | 'progress'>('newest');
 
   useEffect(() => {
-    loadDashboard();
-  }, []);
+    // Only load dashboard when auth is initialized and user is authenticated
+    if (initialized && user) {
+      loadDashboard();
+    }
+  }, [initialized, user]);
 
   useEffect(() => {
     filterAndSortVideos();
