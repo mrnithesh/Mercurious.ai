@@ -25,9 +25,9 @@ async def process_video(request: VideoProcessRequest, current_user: dict = Depen
         raise HTTPException(status_code=500, detail=str(e))
 
 # User Library Management
-@app.get("/api/videos/library", response_model=List[VideoLibraryItem])
-async def get_user_library(current_user: dict = Depends(get_current_user)):
-    """Get user's video library"""
+@app.get("/api/videos/dashboard", response_model=List[VideoLibraryItem])
+async def get_user_dashboard(current_user: dict = Depends(get_current_user)):
+    """Get user's dashboard with video library data"""
     try:
         user_id = current_user.get("uid")
         if not user_id:
@@ -132,36 +132,6 @@ async def update_video_notes(
             raise HTTPException(status_code=404, detail="Video not found in user's library")
         
         return {"message": "Video notes updated successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Dashboard/Stats endpoints
-@app.get("/api/videos/stats")
-async def get_user_video_stats(current_user: dict = Depends(get_current_user)):
-    """Get user's video processing statistics"""
-    try:
-        user_id = current_user.get("uid")
-        if not user_id:
-            raise HTTPException(status_code=401, detail="User ID not found in token")
-        
-        library = await video_service.get_user_library(user_id)
-        
-        # Calculate stats
-        total_videos = len(library)
-        favorites_count = sum(1 for video in library if video.is_favorite)
-        watched_count = sum(1 for video in library if video.progress > 0)
-        completed_count = sum(1 for video in library if video.progress >= 0.9)
-        
-        # Get recent videos (last 5)
-        recent_videos = library[:5] if library else []
-        
-        return {
-            "total_videos": total_videos,
-            "favorites_count": favorites_count,
-            "watched_count": watched_count,
-            "completed_count": completed_count,
-            "recent_videos": recent_videos
-        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

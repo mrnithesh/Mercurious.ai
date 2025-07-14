@@ -40,7 +40,11 @@ export class APIClient extends BaseAPIClient {
     return this.chat.setVideoContext(videoId, context);
   }
 
-  // New video library methods
+  // Dashboard and library methods
+  async getDashboard() {
+    return this.video.getDashboard();
+  }
+
   async getVideoLibrary() {
     return this.video.getLibrary();
   }
@@ -63,9 +67,5 @@ export class APIClient extends BaseAPIClient {
 
   async updateVideoNotes(videoId: string, notes: string) {
     return this.video.updateNotes(videoId, notes);
-  }
-
-  async getVideoStats() {
-    return this.video.getStats();
   }
 } 

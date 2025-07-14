@@ -6,8 +6,13 @@ export class VideoAPIService extends BaseAPIClient {
     return this.makePostRequest<VideoResponse>('/api/videos/process', { url: videoUrl });
   }
 
+  async getDashboard(): Promise<VideoLibraryItem[]> {
+    return this.makeGetRequest<VideoLibraryItem[]>('/api/videos/dashboard');
+  }
+
+  // Legacy method for backward compatibility
   async getLibrary(): Promise<VideoLibraryItem[]> {
-    return this.makeGetRequest<VideoLibraryItem[]>('/api/videos/library');
+    return this.getDashboard();
   }
 
   async getVideo(videoId: string): Promise<VideoResponse> {
@@ -30,15 +35,7 @@ export class VideoAPIService extends BaseAPIClient {
     return this.makePutRequest<{ message: string }>(`/api/videos/${videoId}/notes`, { notes });
   }
 
-  async getStats(): Promise<{
-    total_videos: number;
-    favorites_count: number;
-    watched_count: number;
-    completed_count: number;
-    recent_videos: VideoLibraryItem[];
-  }> {
-    return this.makeGetRequest('/api/videos/stats');
-  }
+
 
   isValidYouTubeUrl(url: string): boolean {
     return /^https?:\/\/(www\.)?(youtube\.com\/(watch\?v=|embed\/)|youtu\.be\/)[\w-]+/.test(url);
