@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef, memo, useCallback } from 'react';
 import Link from 'next/link';
+import { FixedSizeGrid as Grid } from 'react-window';
 import { 
   Brain, 
   Video, 
@@ -39,6 +40,75 @@ function calculateStats(videos: VideoLibraryItem[]) {
     completedCount,
     inProgressCount
   };
+}
+
+// Lazy Image component for performance optimization
+function LazyImage({ src, alt, className, onError }: {
+  src: string;
+  alt: string;
+  className?: string;
+  onError?: () => void;
+}) {
+  const [inView, setInView] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+  const imgRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin: '50px' }
+    );
+    
+    if (imgRef.current) {
+      observer.observe(imgRef.current);
+    }
+    
+    return () => observer.disconnect();
+  }, []);
+
+  const handleImageError = () => {
+    setError(true);
+    onError?.();
+  };
+
+  const handleImageLoad = () => {
+    setLoaded(true);
+  };
+
+  return (
+    <div ref={imgRef} className={className}>
+      {inView && !error ? (
+        <img 
+          src={src} 
+          alt={alt}
+          onLoad={handleImageLoad}
+          onError={handleImageError}
+          className={`w-full h-full object-cover transition-opacity duration-300 ${
+            loaded ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-400 to-fuchsia-500">
+          <Video className="w-12 h-12 text-white" />
+        </div>
+      )}
+      
+      {/* Loading placeholder */}
+      {inView && !loaded && !error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-400 to-fuchsia-500">
+          <div className="animate-pulse">
+            <Video className="w-12 h-12 text-white opacity-50" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // Helper function to get smart video sections
@@ -96,15 +166,15 @@ interface VideoCardProps {
   showMenu?: boolean;
 }
 
-function VideoCard({ video, onRemove, onToggleFavorite, showMenu = true }: VideoCardProps) {
+const VideoCard = memo(function VideoCard({ video, onRemove, onToggleFavorite, showMenu = true }: VideoCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   const [imageError, setImageError] = useState(false);
   
-  const progressPercentage = Math.round(video.progress * 100);
+  const progressPercentage = useMemo(() => Math.round(video.progress * 100), [video.progress]);
   
-  const handleRemove = async () => {
+  const handleRemove = useCallback(async () => {
     if (confirm('Are you sure you want to remove this video from your library?')) {
       setIsRemoving(true);
       try {
@@ -114,31 +184,31 @@ function VideoCard({ video, onRemove, onToggleFavorite, showMenu = true }: Video
       }
     }
     setIsMenuOpen(false);
-  };
+  }, [onRemove, video.video_id]);
 
-  const handleToggleFavorite = async () => {
+  const handleToggleFavorite = useCallback(async () => {
     setIsTogglingFavorite(true);
     try {
       await onToggleFavorite?.(video.video_id, !video.is_favorite);
     } finally {
       setIsTogglingFavorite(false);
     }
-  };
+  }, [onToggleFavorite, video.video_id, video.is_favorite]);
 
-  const handleImageError = () => {
+  const handleImageError = useCallback(() => {
     setImageError(true);
-  };
+  }, []);
 
   return (
     <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-100 overflow-hidden group">
       {/* Thumbnail */}
       <div className="relative">
         <div className="aspect-video bg-gradient-to-br from-purple-400 to-fuchsia-500 flex items-center justify-center overflow-hidden">
-          {!imageError && video.thumbnail_url ? (
-            <img
+          {video.thumbnail_url ? (
+            <LazyImage
               src={video.thumbnail_url}
               alt={video.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full relative"
               onError={handleImageError}
             />
           ) : (
@@ -269,7 +339,7 @@ function VideoCard({ video, onRemove, onToggleFavorite, showMenu = true }: Video
       )}
     </div>
   );
-}
+});
 
 function VideoSection({ title, videos, showAll = false, onRemove, onToggleFavorite }: {
   title: string;
@@ -310,6 +380,89 @@ function VideoSection({ title, videos, showAll = false, onRemove, onToggleFavori
     </div>
   );
 }
+
+const VirtualizedVideoGrid = memo(function VirtualizedVideoGrid({ 
+  videos, 
+  onRemove, 
+  onToggleFavorite 
+}: {
+  videos: VideoLibraryItem[];
+  onRemove?: (videoId: string) => void;
+  onToggleFavorite?: (videoId: string, isFavorite: boolean) => void;
+}) {
+  // Calculate responsive grid dimensions
+  const { columnCount, itemWidth, containerWidth } = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return { columnCount: 4, itemWidth: 320, containerWidth: 1280 };
+    }
+    
+    const width = window.innerWidth;
+    let cols = 4;
+    if (width < 768) cols = 1;      // mobile
+    else if (width < 1024) cols = 2; // tablet
+    else if (width < 1280) cols = 3; // small desktop
+    
+    const padding = 32; // 2rem on each side
+    const gap = 24;     // 1.5rem gap between items
+    const availableWidth = Math.min(width - padding, 1280); // max-width container
+    const itemW = (availableWidth - (gap * (cols - 1))) / cols;
+    
+    return { 
+      columnCount: cols, 
+      itemWidth: Math.floor(itemW), 
+      containerWidth: availableWidth 
+    };
+  }, []);
+
+  const rowCount = Math.ceil(videos.length / columnCount);
+  const itemHeight = 420; // Height of video card
+
+  const Cell = ({ columnIndex, rowIndex, style }: {
+    columnIndex: number;
+    rowIndex: number;
+    style: React.CSSProperties;
+  }) => {
+    const index = rowIndex * columnCount + columnIndex;
+    const video = videos[index];
+
+    if (!video) {
+      return <div style={style} />;
+    }
+
+    return (
+      <div style={{
+        ...style,
+        padding: '12px', // Half of gap for spacing
+      }}>
+        <VideoCard
+          video={video}
+          onRemove={onRemove}
+          onToggleFavorite={onToggleFavorite}
+        />
+      </div>
+    );
+  };
+
+  if (videos.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="w-full">
+      <Grid
+        columnCount={columnCount}
+        columnWidth={itemWidth}
+        height={Math.min(rowCount * itemHeight, 600)} // Max height to avoid too tall grids
+        rowCount={rowCount}
+        rowHeight={itemHeight}
+        width={containerWidth}
+        className="mx-auto"
+      >
+        {Cell}
+      </Grid>
+    </div>
+  );
+});
 
 export default function UnifiedDashboard() {
   const [videos, setVideos] = useState<VideoLibraryItem[]>([]);
@@ -375,16 +528,16 @@ export default function UnifiedDashboard() {
     setFilteredVideos(filtered);
   };
 
-  const handleRemoveVideo = async (videoId: string) => {
+  const handleRemoveVideo = useCallback(async (videoId: string) => {
     try {
       await apiClient.removeVideoFromLibrary(videoId);
       setVideos(prev => prev.filter(v => v.video_id !== videoId));
     } catch (err) {
       alert('Failed to remove video: ' + (err instanceof Error ? err.message : 'Unknown error'));
     }
-  };
+  }, []);
 
-  const handleToggleFavorite = async (videoId: string, isFavorite: boolean) => {
+  const handleToggleFavorite = useCallback(async (videoId: string, isFavorite: boolean) => {
     try {
       await apiClient.toggleVideoFavorite(videoId, isFavorite);
       setVideos(prev => prev.map(v => 
@@ -393,7 +546,7 @@ export default function UnifiedDashboard() {
     } catch (err) {
       alert('Failed to update favorite: ' + (err instanceof Error ? err.message : 'Unknown error'));
     }
-  };
+  }, []);
 
   if (loading) {
     return (
@@ -643,18 +796,13 @@ export default function UnifiedDashboard() {
                   </div>
                 </div>
 
-                {/* Videos Grid */}
+                {/* Virtualized Videos Grid */}
                 {filteredVideos.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {filteredVideos.map((video) => (
-                      <VideoCard
-                        key={video.video_id}
-                        video={video}
-                        onRemove={handleRemoveVideo}
-                        onToggleFavorite={handleToggleFavorite}
-                      />
-                    ))}
-                  </div>
+                  <VirtualizedVideoGrid
+                    videos={filteredVideos}
+                    onRemove={handleRemoveVideo}
+                    onToggleFavorite={handleToggleFavorite}
+                  />
                 ) : videos.length === 0 ? null : (
                   /* Empty State - No filtered results */
                   <div className="bg-white rounded-xl p-12 text-center shadow-lg border border-purple-100">

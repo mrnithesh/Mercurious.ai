@@ -30,6 +30,30 @@ class VideoDatabase:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error fetching global video: {str(e)}")
     
+    async def batch_get_global_videos(self, video_ids: List[str]) -> Dict[str, GlobalVideo]:
+        """Batch fetch multiple videos from global collection - eliminates N+1 query problem"""
+        try:
+            if not video_ids:
+                return {}
+            
+            # Firestore has a limit of 10 documents per get_all call, so we batch them
+            batch_size = 10
+            global_videos = {}
+            
+            for i in range(0, len(video_ids), batch_size):
+                batch_ids = video_ids[i:i + batch_size]
+                doc_refs = [self.db.collection('videos').document(video_id) for video_id in batch_ids]
+                docs = self.db.get_all(doc_refs)
+                
+                for doc in docs:
+                    if doc.exists:
+                        data = doc.to_dict()
+                        global_videos[doc.id] = GlobalVideo(**data)
+            
+            return global_videos
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error batch fetching global videos: {str(e)}")
+    
     async def save_global_video(self, global_video: GlobalVideo) -> bool:
         """Save video to global videos collection"""
         try:
@@ -118,19 +142,35 @@ class VideoDatabase:
             raise HTTPException(status_code=500, detail=f"Error fetching user video metadata: {str(e)}")
     
     async def get_user_library(self, user_id: str, limit: int = 50) -> List[VideoLibraryItem]:
-        """Get user's video library with pagination"""
+        """Get user's video library with pagination - optimized with batch fetching"""
         try:
+            # Step 1: Get all user video metadata (1 query)
             user_videos_ref = self.db.collection('users').document(user_id).collection('videos')
             docs = user_videos_ref.order_by('user_metadata.added_at', direction='DESCENDING').limit(limit).get()
             
-            library_items = []
+            # Step 2: Extract video IDs and prepare user metadata mapping
+            video_ids = []
+            user_metadata_map = {}
+            
             for doc in docs:
                 data = doc.to_dict()
                 video_id = data.get('video_id')
-                user_metadata = data.get('user_metadata', {})
+                if video_id:
+                    video_ids.append(video_id)
+                    user_metadata_map[video_id] = data.get('user_metadata', {})
+            
+            if not video_ids:
+                return []
+            
+            # Step 3: Batch fetch all global videos (1-5 queries depending on batch size)
+            global_videos = await self.batch_get_global_videos(video_ids)
+            
+            # Step 4: Combine user metadata with global video data (in memory)
+            library_items = []
+            for video_id in video_ids:  # Maintain original order
+                global_video = global_videos.get(video_id)
+                user_metadata = user_metadata_map.get(video_id, {})
                 
-                # Get video info from global collection
-                global_video = await self.get_global_video(video_id)
                 if global_video:
                     library_item = VideoLibraryItem(
                         video_id=video_id,
