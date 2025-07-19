@@ -1,0 +1,24 @@
+steps:
+  # 1. Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/mercurious-backend:latest'
+      - '.'
+    dir: 'backend' # Specifies that the build should run in the 'backend' directory
+
+  # 2. Push the Docker image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/mercurious-backend:latest'
+
+# Store the image in Artifact Registry
+images:
+  - '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/mercurious-backend:latest'
+
+
+substitutions:
+  _LOCATION: asia-south1
+  _REPOSITORY: mercurious-ai
