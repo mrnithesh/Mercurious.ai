@@ -31,12 +31,16 @@ import {
   Users,
   Calendar,
   Bookmark,
-  ExternalLink
+  ExternalLink,
+  Target,
+  Trophy,
+  History
 } from 'lucide-react';
-import { apiClient, VideoResponse } from '@/lib/api';
+import { apiClient, VideoResponse, QuizResponse, QuizResultResponse, QuizAvailability } from '@/lib/api';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import ChatAssistant from '@/components/ChatAssistant';
 import { useAuth } from '@/contexts/AuthContext';
+import { QuizGenerator, QuizInterface, QuizResults, QuizHistory, QuizStatistics } from '@/components/Quiz';
 
 interface YouTubePlayerProps {
   videoId: string;
@@ -244,14 +248,24 @@ export default function VideoDetail() {
   const [video, setVideo] = useState<VideoResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'summary' | 'points' | 'concepts' | 'study' | 'vocab' | 'analysis'>('summary');
+  const [activeTab, setActiveTab] = useState<'summary' | 'points' | 'concepts' | 'study' | 'vocab' | 'analysis' | 'quiz'>('summary');
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const [isUpdatingFavorite, setIsUpdatingFavorite] = useState(false);
+
+  // Quiz-related state
+  const [quiz, setQuiz] = useState<QuizResponse | null>(null);
+  const [quizResult, setQuizResult] = useState<QuizResultResponse | null>(null);
+  const [quizAvailability, setQuizAvailability] = useState<QuizAvailability | null>(null);
+  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
+  const [isSubmittingQuiz, setIsSubmittingQuiz] = useState(false);
+  const [quizError, setQuizError] = useState<string | null>(null);
+  const [quizView, setQuizView] = useState<'generator' | 'interface' | 'results' | 'history' | 'statistics'>('generator');
 
   useEffect(() => {
     // Only load video when auth is initialized, user is authenticated, and videoId exists
     if (videoId && initialized && user) {
       loadVideo();
+      checkQuizAvailability();
     }
   }, [videoId, initialized, user]);
 
@@ -301,6 +315,89 @@ export default function VideoDetail() {
     } catch (err) {
       alert('Failed to save notes: ' + (err instanceof Error ? err.message : 'Unknown error'));
       throw err;
+    }
+  };
+
+  // Quiz-related functions
+  const checkQuizAvailability = async () => {
+    try {
+      const availability = await apiClient.quiz.checkQuizAvailability(videoId);
+      setQuizAvailability(availability);
+    } catch (err) {
+      console.error('Error checking quiz availability:', err);
+      // Don't show error for quiz availability check
+    }
+  };
+
+  const handleQuizGenerated = (generatedQuiz: QuizResponse) => {
+    setQuiz(generatedQuiz);
+    setQuizResult(null);
+    setQuizView('interface');
+    setIsGeneratingQuiz(false);
+    setQuizError(null);
+    
+    // Update availability
+    setQuizAvailability({
+      video_id: videoId,
+      quiz_available: true,
+      quiz_fresh: true,
+      generated_at: generatedQuiz.generated_at
+    });
+  };
+
+  const handleQuizSubmitted = (result: QuizResultResponse) => {
+    setQuizResult(result);
+    setQuizView('results');
+    setIsSubmittingQuiz(false);
+    setQuizError(null);
+  };
+
+  const handleQuizError = (error: string) => {
+    setQuizError(error);
+    setIsGeneratingQuiz(false);
+    setIsSubmittingQuiz(false);
+  };
+
+  const handleRetakeQuiz = () => {
+    if (quiz) {
+      setQuizResult(null);
+      setQuizView('interface');
+      setQuizError(null);
+    } else {
+      setQuizView('generator');
+    }
+  };
+
+  const handleNewQuiz = () => {
+    setQuiz(null);
+    setQuizResult(null);
+    setQuizView('generator');
+    setQuizError(null);
+    setQuizAvailability(null);
+  };
+
+  const handleQuizReset = () => {
+    setQuiz(null);
+    setQuizResult(null);
+    setQuizView('generator');
+    setQuizError(null);
+  };
+
+  const handleViewHistory = () => {
+    setQuizView('history');
+  };
+
+  const handleViewStatistics = () => {
+    setQuizView('statistics');
+  };
+
+  const handleBackToQuiz = () => {
+    if (quiz && !quizResult) {
+      setQuizView('interface');
+    } else if (quizResult) {
+      setQuizView('results');
+    } else {
+      setQuizView('generator');
     }
   };
 
@@ -360,6 +457,7 @@ ${video.content.analysis}
     { id: 'study', label: 'Study Guide', icon: BookOpen, color: 'from-fuchsia-500 to-pink-600' },
     { id: 'vocab', label: 'Vocabulary', icon: SpellCheck, color: 'from-violet-500 to-purple-600' },
     { id: 'analysis', label: 'Analysis', icon: BarChart3, color: 'from-rose-500 to-red-600' },
+    { id: 'quiz', label: 'AI Quiz', icon: Target, color: 'from-indigo-500 to-blue-600' },
   ];
 
   if (loading) {
@@ -678,6 +776,137 @@ ${video.content.analysis}
                       <div className="text-gray-700 leading-relaxed">
                         {formatText(video.content.analysis)}
                       </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'quiz' && (
+                    <div className="space-y-6">
+                      {/* Quiz Error Display */}
+                      {quizError && (
+                        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="text-red-600">
+                              <Target className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-medium text-red-900 mb-1">
+                                Quiz Error
+                              </h4>
+                              <p className="text-sm text-red-700">{quizError}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Quiz Navigation */}
+                      {(quizView === 'history' || quizView === 'statistics') && (
+                        <div className="bg-white rounded-xl shadow-lg border border-purple-100 p-4">
+                          <div className="flex items-center justify-between">
+                            <button
+                              onClick={handleBackToQuiz}
+                              className="flex items-center gap-2 px-4 py-2 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-lg transition-colors"
+                            >
+                              <ArrowLeft className="w-4 h-4" />
+                              Back to Quiz
+                            </button>
+                            
+                            <div className="flex gap-2">
+                              <button
+                                onClick={handleViewHistory}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                                  quizView === 'history'
+                                    ? 'bg-purple-600 text-white'
+                                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                                }`}
+                              >
+                                <History className="w-4 h-4" />
+                                History
+                              </button>
+                              <button
+                                onClick={handleViewStatistics}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                                  quizView === 'statistics'
+                                    ? 'bg-purple-600 text-white'
+                                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                                }`}
+                              >
+                                <Trophy className="w-4 h-4" />
+                                Statistics
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Quiz Content */}
+                      {quizView === 'generator' && (
+                        <QuizGenerator
+                          videoId={videoId}
+                          videoTitle={video.info.title}
+                          onQuizGenerated={handleQuizGenerated}
+                          onError={handleQuizError}
+                          isLoading={isGeneratingQuiz}
+                          availability={quizAvailability}
+                        />
+                      )}
+
+                      {quizView === 'interface' && quiz && (
+                        <QuizInterface
+                          quiz={quiz}
+                          onSubmit={handleQuizSubmitted}
+                          onReset={handleQuizReset}
+                          onError={handleQuizError}
+                          isSubmitting={isSubmittingQuiz}
+                        />
+                      )}
+
+                      {quizView === 'results' && quizResult && (
+                        <QuizResults
+                          result={quizResult}
+                          onRetakeQuiz={handleRetakeQuiz}
+                          onNewQuiz={handleNewQuiz}
+                        />
+                      )}
+
+                      {quizView === 'history' && (
+                        <QuizHistory
+                          videoId={videoId}
+                          onRetakeQuiz={handleRetakeQuiz}
+                          onResetHistory={() => {
+                            // Refresh quiz availability after reset
+                            checkQuizAvailability();
+                          }}
+                        />
+                      )}
+
+                      {quizView === 'statistics' && (
+                        <QuizStatistics />
+                      )}
+
+                      {/* Quick Actions */}
+                      {(quizView === 'generator' || quizView === 'results') && (
+                        <div className="bg-white rounded-xl shadow-lg border border-purple-100 p-6">
+                          <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                            Quick Actions
+                          </h4>
+                          <div className="flex flex-wrap gap-3">
+                            <button
+                              onClick={handleViewHistory}
+                              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200"
+                            >
+                              <History className="w-4 h-4" />
+                              View History
+                            </button>
+                            <button
+                              onClick={handleViewStatistics}
+                              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200"
+                            >
+                              <Trophy className="w-4 h-4" />
+                              View Statistics
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
