@@ -346,6 +346,7 @@ export default function VideoDetail() {
   };
 
   const handleQuizSubmitted = (result: QuizResultResponse) => {
+    console.log('Quiz submitted successfully:', result);
     setQuizResult(result);
     setQuizView('results');
     setIsSubmittingQuiz(false);
@@ -853,7 +854,10 @@ ${video.content.analysis}
                       {quizView === 'interface' && quiz && (
                         <QuizInterface
                           quiz={quiz}
-                          onSubmit={handleQuizSubmitted}
+                          onSubmit={(result) => {
+                            console.log('QuizInterface onSubmit called with:', result);
+                            handleQuizSubmitted(result);
+                          }}
                           onReset={handleQuizReset}
                           onError={handleQuizError}
                           isSubmitting={isSubmittingQuiz}

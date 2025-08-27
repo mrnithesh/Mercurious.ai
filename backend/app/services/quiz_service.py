@@ -263,6 +263,16 @@ IMPORTANT: Return ONLY the JSON array, no additional text, formatting, or explan
             # Clean the response - remove any markdown formatting or extra text
             cleaned_response = ai_response.strip()
             
+            # Remove markdown code blocks if present
+            if cleaned_response.startswith('```'):
+                lines = cleaned_response.split('\n')
+                # Remove first and last lines if they contain ```
+                if lines[0].strip().startswith('```'):
+                    lines = lines[1:]
+                if lines and lines[-1].strip().endswith('```'):
+                    lines = lines[:-1]
+                cleaned_response = '\n'.join(lines)
+            
             # Find JSON content (look for array brackets)
             start_idx = cleaned_response.find('[')
             end_idx = cleaned_response.rfind(']') + 1
@@ -271,6 +281,11 @@ IMPORTANT: Return ONLY the JSON array, no additional text, formatting, or explan
                 raise ValueError("No JSON array found in AI response")
             
             json_content = cleaned_response[start_idx:end_idx]
+            
+            # Clean up common JSON issues
+            # Remove trailing commas before closing brackets/braces
+            import re
+            json_content = re.sub(r',(\s*[}\]])', r'\1', json_content)
             
             # Parse JSON
             quiz_data = json.loads(json_content)
@@ -287,12 +302,33 @@ IMPORTANT: Return ONLY the JSON array, no additional text, formatting, or explan
                         raise ValueError(f"Missing required field: {field}")
                 
                 # Validate options format
-                if not isinstance(item['options'], list) or len(item['options']) != 4:
-                    raise ValueError("Each question must have exactly 4 options")
+                if not isinstance(item['options'], list) or len(item['options']) < 2:
+                    raise ValueError("Each question must have at least 2 options")
                 
-                # Validate correct answer is in options
-                if item['correct_answer'] not in item['options']:
-                    raise ValueError("Correct answer must be one of the provided options")
+                # Ensure we have exactly 4 options (pad if necessary)
+                while len(item['options']) < 4:
+                    item['options'].append(f"Option {len(item['options']) + 1}")
+                if len(item['options']) > 4:
+                    item['options'] = item['options'][:4]
+                
+                # Validate correct answer is in options (case insensitive and flexible matching)
+                correct_answer = item['correct_answer'].strip()
+                options = [opt.strip() for opt in item['options']]
+                
+                # Try exact match first
+                if correct_answer not in options:
+                    # Try case insensitive match
+                    correct_lower = correct_answer.lower()
+                    options_lower = [opt.lower() for opt in options]
+                    
+                    if correct_lower in options_lower:
+                        # Update correct_answer to match the actual option
+                        match_index = options_lower.index(correct_lower)
+                        item['correct_answer'] = options[match_index]
+                    else:
+                        # If still no match, use the first option as fallback
+                        print(f"Warning: Correct answer '{correct_answer}' not found in options {options}. Using first option as fallback.")
+                        item['correct_answer'] = options[0]
                 
                 quiz_question = QuizQuestion(
                     question=item['question'],

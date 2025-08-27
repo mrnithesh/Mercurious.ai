@@ -79,6 +79,10 @@ async def submit_quiz(
     except HTTPException:
         raise
     except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Quiz submission error: {str(e)}")
+        print(f"Full traceback: {error_details}")
         raise HTTPException(status_code=500, detail=f"Error processing quiz submission: {str(e)}")
 
 @app.get("/api/quiz/history/{video_id}", response_model=List[QuizResult])

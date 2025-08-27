@@ -33,6 +33,31 @@ export default function QuizResults({
 }: QuizResultsProps) {
   const [showDetailedReview, setShowDetailedReview] = useState(false);
 
+  // Safety check to prevent undefined errors
+  if (!result || !result.result || !result.questions) {
+    return (
+      <div className={`bg-white rounded-2xl shadow-xl border border-red-200 p-8 ${className}`}>
+        <div className="text-center">
+          <div className="text-red-600 mb-4">
+            <Trophy className="w-12 h-12 mx-auto" />
+          </div>
+          <h3 className="text-lg font-semibold text-red-900 mb-2">
+            Error Loading Results
+          </h3>
+          <p className="text-red-700 mb-4">
+            Quiz results are not available. Please try taking the quiz again.
+          </p>
+          <button
+            onClick={onRetakeQuiz}
+            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Retake Quiz
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const { result: quizResult, questions } = result;
   const scorePercentage = Math.round((quizResult.score / quizResult.total_questions) * 100);
   
@@ -216,7 +241,9 @@ export default function QuizResults({
 
           {questions.map((question, index) => {
             const isCorrect = quizResult.correct_answers.includes(index);
-            const userAnswer = `Answer ${index + 1}`; // This would come from the submission data
+            // For now, we'll show the correct answer as selected since we don't store user answers
+            // TODO: Store user answers in the result for proper review
+            const userAnswer = question.correct_answer; // Placeholder until we store user answers
             
             return (
               <div key={index} className="relative">

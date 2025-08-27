@@ -88,7 +88,7 @@ export default function QuizInterface({
     }
   };
 
-  const handleSubmitQuiz = () => {
+  const handleSubmitQuiz = async () => {
     // Validate all questions are answered
     const unansweredQuestions = quizState.answers
       .map((answer, index) => ({ answer, index }))
@@ -105,7 +105,16 @@ export default function QuizInterface({
       answers: quizState.answers
     };
 
-    onSubmit(submission);
+    try {
+      console.log('Submitting quiz:', submission);
+      const { apiClient } = await import('@/lib/api');
+      const result = await apiClient.quiz.submitQuiz(submission);
+      console.log('Quiz submission result:', result);
+      onSubmit(result);
+    } catch (error) {
+      console.error('Quiz submission error:', error);
+      onError(error instanceof Error ? error.message : 'Failed to submit quiz');
+    }
   };
 
   const handleReset = () => {
