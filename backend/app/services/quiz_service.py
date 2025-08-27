@@ -91,15 +91,22 @@ class QuizService:
             
             # Calculate score and identify correct answers
             correct_answers = []
+            user_answers = []
             score = 0
             
             for i, (answer, question) in enumerate(zip(submission.answers, cached_quiz.questions)):
                 if answer.question_index != i:
                     raise HTTPException(status_code=400, detail=f"Answer index mismatch at question {i}")
                 
+                user_answers.append(answer.selected_answer)
+                
                 if answer.selected_answer == question.correct_answer:
                     correct_answers.append(i)
                     score += 1
+            
+            # Calculate time taken (for now, use a placeholder of 5 minutes)
+            # TODO: Implement proper timer by storing start time when quiz is generated
+            time_taken = 300  # 5 minutes placeholder
             
             # Create quiz result
             quiz_result = QuizResult(
@@ -107,8 +114,9 @@ class QuizService:
                 score=score,
                 total_questions=len(cached_quiz.questions),
                 correct_answers=correct_answers,
+                user_answers=user_answers,
                 submitted_at=datetime.now(),
-                time_taken=0  # TODO: Implement timer functionality
+                time_taken=time_taken
             )
             
             # Save quiz result to user's history

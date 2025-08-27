@@ -241,9 +241,8 @@ export default function QuizResults({
 
           {questions.map((question, index) => {
             const isCorrect = quizResult.correct_answers.includes(index);
-            // For now, we'll show the correct answer as selected since we don't store user answers
-            // TODO: Store user answers in the result for proper review
-            const userAnswer = question.correct_answer; // Placeholder until we store user answers
+            const userAnswer = quizResult.user_answers[index] || '';
+            const correctAnswer = question.correct_answer;
             
             return (
               <div key={index} className="relative">
@@ -264,14 +263,94 @@ export default function QuizResults({
                   </div>
                 </div>
 
-                <QuizQuestion
-                  question={question}
-                  questionIndex={index}
-                  selectedAnswer={userAnswer}
-                  onAnswerSelect={() => {}} // Read-only
-                  showResult={true}
-                  isSubmitted={true}
-                />
+                <div className="bg-white rounded-xl shadow-lg border border-purple-100 p-4">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="flex items-center justify-center w-7 h-7 bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white rounded-lg text-sm font-bold flex-shrink-0">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <h2 className="text-base font-semibold text-gray-900 leading-tight">
+                        {question.question}
+                      </h2>
+                    </div>
+                  </div>
+
+                  {/* Answer Options with Review Styling */}
+                  <div className="space-y-2 mb-4">
+                    {question.options.map((option, optionIndex) => {
+                      const optionLetter = String.fromCharCode(65 + optionIndex);
+                      const isCorrect = option === correctAnswer;
+                      const isUserAnswer = option === userAnswer;
+                      const isIncorrect = isUserAnswer && !isCorrect;
+                      
+                      return (
+                        <div
+                          key={optionIndex}
+                          className={`
+                            w-full p-3 rounded-lg border-2 text-left flex items-center gap-3 min-h-[48px] shadow-sm
+                            ${isCorrect && isUserAnswer
+                              ? 'bg-green-50 border-green-500 text-green-900 shadow-green-100'
+                              : isCorrect
+                                ? 'bg-green-50 border-green-300 text-green-800 shadow-green-50'
+                                : isIncorrect
+                                  ? 'bg-red-50 border-red-500 text-red-900 shadow-red-100'
+                                  : 'bg-gray-50 border-gray-200 text-gray-700'
+                            }
+                          `}
+                        >
+                          <div className={`
+                            flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold flex-shrink-0
+                            ${isCorrect && isUserAnswer
+                              ? 'bg-green-500 text-white'
+                              : isCorrect
+                                ? 'bg-green-400 text-white'
+                                : isIncorrect
+                                  ? 'bg-red-500 text-white'
+                                  : 'bg-gray-300 text-gray-600'
+                            }
+                          `}>
+                            {optionLetter}
+                          </div>
+                          <span className="text-sm font-medium flex-1 text-inherit leading-relaxed">{option}</span>
+                          
+                          {/* Labels for review mode */}
+                          <div className="flex gap-1">
+                            {isCorrect && (
+                              <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full font-medium">
+                                ✓ Correct
+                              </span>
+                            )}
+                            {isUserAnswer && !isCorrect && (
+                              <span className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-full font-medium">
+                                ✗ Your Answer
+                              </span>
+                            )}
+                            {isUserAnswer && isCorrect && (
+                              <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full font-medium">
+                                ✓ Your Answer
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Explanation */}
+                  {question.explanation && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        <div className="flex items-center justify-center w-5 h-5 bg-blue-500 text-white rounded-full text-xs font-bold flex-shrink-0 mt-0.5">
+                          i
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-blue-900 mb-1">Explanation</h4>
+                          <p className="text-sm text-blue-800 leading-relaxed">{question.explanation}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })}

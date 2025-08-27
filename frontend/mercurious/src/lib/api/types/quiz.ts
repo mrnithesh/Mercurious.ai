@@ -31,6 +31,7 @@ export interface QuizResult {
   score: number;
   total_questions: number;
   correct_answers: number[];
+  user_answers: string[];
   submitted_at: string;
   time_taken: number;
 }
