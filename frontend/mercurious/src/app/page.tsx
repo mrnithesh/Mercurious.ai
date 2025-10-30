@@ -2,26 +2,27 @@
 
 import Link from 'next/link';
 import { 
-  Brain, 
-  Video, 
-  MessageSquare, 
-  FileText, 
-  BarChart3, 
-  Shield, 
-  Lightbulb, 
-  BookOpen, 
-  ArrowRight,
-  CheckCircle,
-  Sparkles,
-  Users,
-  Github,
-  Linkedin,
-  Mail,
-  LogIn,
-  UserPlus,
-  Menu,
-  X
-} from 'lucide-react';
+  FaBrain,
+  FaYoutube,
+  FaComments,
+  FaFileAlt,
+  FaChartLine,
+  FaLightbulb,
+  FaArrowRight,
+  FaUsers,
+  FaGithub,
+  FaLinkedin,
+  FaEnvelope,
+  FaSignInAlt,
+  FaUserPlus,
+  FaBars,
+  FaTimes
+} from 'react-icons/fa';
+import { 
+  MdVideoLibrary,
+  MdSecurity,
+  MdLibraryBooks
+} from 'react-icons/md';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoginModal, RegisterModal, UserMenu } from '@/components/Auth';
@@ -53,49 +54,49 @@ export default function Home() {
 
   const features = [
     {
-      icon: Shield,
+      icon: MdSecurity,
       title: "Secure Firebase Authentication",
       description: "Safe and reliable user authentication with Firebase",
       color: "from-emerald-500 to-teal-600"
     },
     {
-      icon: Video,
+      icon: FaYoutube,
       title: "YouTube Video Processing",
       description: "Transform any YouTube video into structured learning content",
       color: "from-red-500 to-pink-600"
     },
     {
-      icon: Brain,
+      icon: FaBrain,
       title: "AI-Powered Content Analysis",
       description: "Advanced AI analysis using Google's Gemini AI technology",
       color: "from-purple-500 to-violet-600"
     },
     {
-      icon: MessageSquare,
+      icon: FaComments,
       title: "Interactive Chat Assistant",
       description: "Get instant answers and clarifications about video content",
       color: "from-blue-500 to-indigo-600"
     },
     {
-      icon: FileText,
+      icon: FaFileAlt,
       title: "Smart Note-Taking",
       description: "Automatically generated notes and summaries",
       color: "from-orange-500 to-amber-600"
     },
     {
-      icon: BarChart3,
+      icon: FaChartLine,
       title: "Progress Tracking",
       description: "Monitor your learning progress and achievements",
       color: "from-indigo-500 to-purple-600"
     },
     {
-      icon: Lightbulb,
+      icon: FaLightbulb,
       title: "Automated Quiz Generation",
       description: "Test your knowledge with AI-generated quizzes",
       color: "from-yellow-500 to-orange-600"
     },
     {
-      icon: BookOpen,
+      icon: MdLibraryBooks,
       title: "Study Guide Creation",
       description: "Comprehensive study guides tailored to video content",
       color: "from-teal-500 to-cyan-600"
@@ -110,17 +111,17 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50">
+    <div className="min-h-screen bg-white">
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-purple-200/50 shadow-lg shadow-purple-100/50">
+      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <div className="p-2 bg-gradient-to-r from-purple-600 to-fuchsia-600 rounded-xl shadow-lg">
-                <Brain className="w-6 h-6 text-white" />
+              <div className="p-2 bg-slate-900 rounded-lg shadow-sm">
+                <FaBrain className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
+              <span className="text-xl font-bold text-slate-900">
                 Mercurious AI
               </span>
             </Link>
@@ -133,7 +134,7 @@ export default function Home() {
                     <>
                       <Link 
                         href="/dashboard"
-                        className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors flex items-center gap-2"
+                        className="px-4 py-2 text-gray-700 hover:text-slate-900 font-medium transition-colors flex items-center gap-2"
                       >
                         Dashboard
                       </Link>
@@ -141,34 +142,34 @@ export default function Home() {
                       <UserMenu />
                       <Link 
                         href="/process"
-                        className="px-4 py-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center gap-2 shadow-lg"
+                        className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium transition-all duration-200 flex items-center gap-2 shadow-sm"
                       >
                         Process Video
-                        <ArrowRight className="w-4 h-4" />
+                        <FaArrowRight className="w-4 h-4" />
                       </Link>
                     </>
                   ) : (
                     <>
                       <button 
                         onClick={openLoginModal}
-                        className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors flex items-center gap-2"
+                        className="px-4 py-2 text-gray-700 hover:text-slate-900 font-medium transition-colors flex items-center gap-2"
                       >
-                        <LogIn className="w-4 h-4" />
+                        <FaSignInAlt className="w-4 h-4" />
                         Login
                       </button>
                       <button 
                         onClick={openRegisterModal}
-                        className="px-4 py-2 bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center gap-2 shadow-lg"
+                        className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium transition-all duration-200 flex items-center gap-2 shadow-sm"
                       >
-                        <UserPlus className="w-4 h-4" />
+                        <FaUserPlus className="w-4 h-4" />
                         Sign Up
                       </button>
                       <Link 
                         href="/process"
-                        className="px-4 py-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center gap-2 shadow-lg"
+                        className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium transition-all duration-200 flex items-center gap-2 shadow-sm"
                       >
                         Get Started
-                        <ArrowRight className="w-4 h-4" />
+                        <FaArrowRight className="w-4 h-4" />
                       </Link>
                     </>
                   )}
@@ -180,16 +181,16 @@ export default function Home() {
             <div className="lg:hidden">
               <button
                 onClick={toggleMobileMenu}
-                className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200 transition-colors"
+                className="p-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
               >
-                {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                {isMobileMenuOpen ? <FaTimes className="w-5 h-5" /> : <FaBars className="w-5 h-5" />}
               </button>
             </div>
           </div>
 
           {/* Mobile Menu */}
           {isMobileMenuOpen && (
-            <div className="lg:hidden mt-4 pb-4 border-t border-purple-200 pt-4">
+            <div className="lg:hidden mt-4 pb-4 border-t border-gray-200 pt-4">
               <div className="flex flex-col space-y-3">
                 {!loading && (
                   <>
@@ -197,14 +198,14 @@ export default function Home() {
                       <>
                         <Link 
                           href="/dashboard"
-                          className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors flex items-center gap-2"
+                          className="px-4 py-2 text-gray-700 hover:text-slate-900 font-medium transition-colors flex items-center gap-2"
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
                           Dashboard
                         </Link>
                         <Link 
                           href="/library"
-                          className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors flex items-center gap-2"
+                          className="px-4 py-2 text-gray-700 hover:text-slate-900 font-medium transition-colors flex items-center gap-2"
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
                           Library
@@ -214,11 +215,11 @@ export default function Home() {
                         </div>
                         <Link 
                           href="/process"
-                          className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-lg font-medium transition-all duration-300 flex items-center gap-2 shadow-lg justify-center"
+                          className="w-full px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium transition-all duration-200 flex items-center gap-2 shadow-sm justify-center"
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
                           Process Video
-                          <ArrowRight className="w-4 h-4" />
+                          <FaArrowRight className="w-4 h-4" />
                         </Link>
                       </>
                     ) : (
@@ -228,9 +229,9 @@ export default function Home() {
                             openLoginModal();
                             setIsMobileMenuOpen(false);
                           }}
-                          className="w-full px-4 py-2 text-left text-gray-700 hover:text-purple-600 font-medium transition-colors flex items-center gap-2"
+                          className="w-full px-4 py-2 text-left text-gray-700 hover:text-slate-900 font-medium transition-colors flex items-center gap-2"
                         >
-                          <LogIn className="w-4 h-4" />
+                          <FaSignInAlt className="w-4 h-4" />
                           Login
                         </button>
                         <button 
@@ -238,18 +239,18 @@ export default function Home() {
                             openRegisterModal();
                             setIsMobileMenuOpen(false);
                           }}
-                          className="w-full px-4 py-2 bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700 text-white rounded-lg font-medium transition-all duration-300 flex items-center gap-2 shadow-lg justify-center"
+                          className="w-full px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium transition-all duration-200 flex items-center gap-2 shadow-sm justify-center"
                         >
-                          <UserPlus className="w-4 h-4" />
+                          <FaUserPlus className="w-4 h-4" />
                           Sign Up
                         </button>
                         <Link 
                           href="/process"
-                          className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-lg font-medium transition-all duration-300 flex items-center gap-2 shadow-lg justify-center"
+                          className="w-full px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium transition-all duration-200 flex items-center gap-2 shadow-sm justify-center"
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
                           Get Started
-                          <ArrowRight className="w-4 h-4" />
+                          <FaArrowRight className="w-4 h-4" />
                         </Link>
                       </>
                     )}
@@ -262,141 +263,223 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="py-12 sm:py-16 lg:py-20">
-        <div className="container mx-auto px-4 text-center">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-center gap-2 mb-6">
-              <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-purple-600 animate-pulse" />
-              <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold bg-gradient-to-r from-purple-600 via-fuchsia-600 to-violet-600 bg-clip-text text-transparent">
-                Mercurious AI
-              </h1>
-              <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-fuchsia-600 animate-pulse" />
-            </div>
-            <p className="text-lg sm:text-2xl lg:text-3xl text-gray-800 mb-4 font-light">
-              Your AI Learning Assistant 🎓
-            </p>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-700 mb-8 lg:mb-12 max-w-3xl mx-auto leading-relaxed px-4">
-              An intelligent learning platform that transforms YouTube videos into interactive learning experiences using cutting-edge AI technology.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 lg:mb-16 px-4">
-              <Link 
-                href="/process"
-                className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700 text-white text-base sm:text-lg font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-3 shadow-xl"
-              >
-                <Video className="w-5 sm:w-6 h-5 sm:h-6" />
-                Process Your First Video
-              </Link>
-              <button className="px-6 sm:px-8 py-3 sm:py-4 border-2 border-purple-400 text-purple-800 hover:border-fuchsia-500 hover:text-fuchsia-600 text-base sm:text-lg font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-3">
-                <BookOpen className="w-5 sm:w-6 h-5 sm:h-6" />
-                Learn More
-              </button>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 mb-12 lg:mb-16 px-4">
-              {stats.map((stat, index) => (
-                <div key={index} className="text-center group">
-                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-600 to-fuchsia-600 bg-clip-text text-transparent mb-2 group-hover:scale-110 transition-transform">
-                    {stat.value}
-                  </div>
-                  <div className="text-sm sm:text-base text-gray-700 font-medium">
-                    {stat.label}
-                  </div>
+      <section className="relative py-16 sm:py-20 lg:py-24 overflow-hidden bg-white">
+        {/* Subtle background texture */}
+        <div className="absolute inset-0 opacity-[0.02] bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+        
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-7xl mx-auto">
+            {/* Asymmetrical Layout */}
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              {/* Left Column - Content */}
+              <div className="lg:pr-8">
+                {/* Small badge - less perfect */}
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-md mb-6 text-xs font-medium text-blue-700">
+                  <span>✨</span>
+                  <span>Built with Google Gemini</span>
                 </div>
-              ))}
+
+                {/* Main Heading - More human feel */}
+                <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-4 text-slate-900 leading-tight">
+                  Stop watching.
+                  <br />
+                  <span className="text-blue-600">Start learning.</span>
+                </h1>
+                
+                {/* More conversational copy */}
+                <p className="text-lg sm:text-xl text-slate-700 mb-6 leading-relaxed max-w-xl">
+                  You know that feeling when you watch a tutorial but can't remember what you learned 5 minutes later? We fix that. Turn any YouTube video into an actual learning experience.
+                </p>
+                
+                {/* Secondary copy */}
+                <p className="text-base text-slate-600 mb-8 leading-relaxed">
+                  Get summaries, generate quizzes, chat with the content, and build your personal learning library. No more passive watching.
+                </p>
+                
+                {/* CTA Buttons - Left aligned */}
+                <div className="flex flex-col sm:flex-row gap-3 mb-12">
+                  <Link 
+                    href="/process"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-lg transition-colors text-base"
+                  >
+                    <MdVideoLibrary className="w-5 h-5" />
+                    Try it free
+                  </Link>
+                  <button className="inline-flex items-center justify-center gap-2 px-6 py-3.5 border border-slate-300 hover:border-slate-400 text-slate-700 hover:text-slate-900 font-medium rounded-lg transition-colors text-base bg-white">
+                    See how it works
+                  </button>
+                </div>
+
+                {/* Stats - More realistic presentation */}
+                <div className="flex flex-wrap gap-6 sm:gap-8 pt-6 border-t border-slate-200">
+                  {stats.map((stat, index) => (
+                    <div key={index} className="flex flex-col">
+                      <div className="text-3xl sm:text-4xl font-bold text-slate-900 mb-1">
+                        {stat.value}
+                      </div>
+                      <div className="text-sm text-slate-600">
+                        {stat.label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Column - Visual Element */}
+              <div className="relative lg:pl-8">
+                {/* Card-like visual with organic shapes */}
+                <div className="relative">
+                  {/* Main card */}
+                  <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-8 sm:p-12 border border-blue-100 shadow-lg">
+                    <div className="space-y-6">
+                      {/* Video placeholder */}
+                      <div className="aspect-video bg-slate-200 rounded-lg flex items-center justify-center">
+                        <FaYoutube className="w-16 h-16 text-slate-400" />
+                      </div>
+                      
+                      {/* Features list */}
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                          <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-sm font-medium text-slate-900">AI Summary</div>
+                            <div className="text-xs text-slate-600">Key points extracted</div>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-6 h-6 rounded bg-cyan-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-sm font-medium text-slate-900">Smart Quiz</div>
+                            <div className="text-xs text-slate-600">Test your understanding</div>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-6 h-6 rounded bg-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-sm font-medium text-slate-900">Study Guide</div>
+                            <div className="text-xs text-slate-600">Personalized notes</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Decorative elements - organic shapes */}
+                  <div className="absolute -top-4 -right-4 w-24 h-24 bg-blue-200 rounded-full opacity-20 blur-2xl"></div>
+                  <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-cyan-200 rounded-full opacity-20 blur-2xl"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-white/70 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12 lg:mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Powerful Features
+      <section className="py-16 sm:py-20 lg:py-24 bg-slate-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Section Header - Left aligned */}
+          <div className="mb-12 lg:mb-16 max-w-2xl">
+            <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">
+              What makes it different?
             </h2>
-            <p className="text-lg sm:text-xl text-gray-700 max-w-3xl mx-auto px-4">
-              Everything you need to transform your learning experience with AI-powered tools and insights.
+            <p className="text-lg text-slate-600 leading-relaxed">
+              We built this because we were frustrated with passive learning. Here's what actually helps you retain information.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-            {features.map((feature, index) => (
-              <div 
-                key={index}
-                className="group p-6 lg:p-8 bg-white backdrop-blur-sm rounded-2xl hover:bg-purple-50 transition-all duration-300 transform hover:scale-105 border border-purple-200 hover:border-fuchsia-300 shadow-lg hover:shadow-xl hover:shadow-purple-200/50"
-              >
-                <div className={`p-3 bg-gradient-to-r ${feature.color} rounded-xl w-fit mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
-                  <feature.icon className="w-5 sm:w-6 h-5 sm:h-6 text-white" />
+          {/* Features Grid - Varied layouts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((feature, index) => {
+              // Vary the card styles for more authentic feel
+              const isLarge = index === 0 || index === 4;
+              const isHighlighted = index === 2;
+              
+              return (
+                <div 
+                  key={index}
+                  className={`group p-6 bg-white rounded-lg border border-slate-200 hover:border-slate-300 hover:shadow-lg transition-all ${
+                    isLarge ? 'md:col-span-2' : ''
+                  } ${isHighlighted ? 'lg:border-blue-300 lg:bg-blue-50/30' : ''}`}
+                >
+                  <div className={`inline-flex p-3 rounded-lg mb-4 ${
+                    isHighlighted ? 'bg-blue-600' : `bg-gradient-to-r ${feature.color}`
+                  }`}>
+                    <feature.icon className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                    {feature.title}
+                  </h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">
+                    {feature.description}
+                  </p>
                 </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
 
       {/* How It Works */}
-      <section className="py-12 sm:py-16 lg:py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12 lg:mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              How It Works
+      <section className="py-16 sm:py-20 lg:py-24 bg-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Section Header - Right aligned for variation */}
+          <div className="mb-12 lg:mb-16 max-w-2xl ml-auto text-right lg:text-left">
+            <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">
+              How it works
             </h2>
-            <p className="text-lg sm:text-xl text-gray-700 max-w-3xl mx-auto px-4">
-              Three simple steps to transform any YouTube video into a comprehensive learning experience.
+            <p className="text-lg text-slate-600 leading-relaxed">
+              It's simpler than you think. Three steps, zero hassle.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-8 max-w-5xl mx-auto">
+          {/* Steps - Horizontal layout with numbers */}
+          <div className="space-y-8 max-w-4xl">
             {[
               {
-                step: "01",
-                title: "Paste YouTube URL",
-                description: "Simply paste any YouTube video URL into our processor",
-                icon: Video,
-                color: "from-red-500 to-pink-600"
+                step: "1",
+                title: "Paste the URL",
+                description: "Grab any YouTube video link and drop it in. That's it. No signup required to try it.",
+                icon: FaYoutube,
               },
               {
-                step: "02", 
-                title: "AI Analysis",
-                description: "Our AI extracts transcripts and analyzes content using advanced algorithms",
-                icon: Brain,
-                color: "from-purple-500 to-fuchsia-600"
+                step: "2", 
+                title: "We do the heavy lifting",
+                description: "Our AI extracts the transcript, analyzes the content, and breaks it down into digestible chunks. Takes about 30 seconds.",
+                icon: FaBrain,
               },
               {
-                step: "03",
-                title: "Learn & Engage",
-                description: "Access summaries, quizzes, study guides, and interactive chat",
-                icon: BookOpen,
-                color: "from-violet-500 to-purple-600"
+                step: "3",
+                title: "Start learning",
+                description: "Browse summaries, take quizzes, ask questions via chat, or save it to your library for later. Your call.",
+                icon: MdLibraryBooks,
               }
             ].map((item, index) => (
-              <div key={index} className="text-center relative">
-                <div className="relative z-10">
-                  <div className={`w-16 sm:w-20 h-16 sm:h-20 bg-gradient-to-r ${item.color} rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl`}>
-                    <item.icon className="w-8 sm:w-10 h-8 sm:h-10 text-white" />
+              <div key={index} className="flex gap-6 items-start group">
+                {/* Step number - larger, more prominent */}
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-lg group-hover:bg-blue-600 transition-colors">
+                    {item.step}
                   </div>
-                  <div className="text-sm font-bold text-fuchsia-600 mb-2">STEP {item.step}</div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
-                    {item.title}
-                  </h3>
-                  <p className="text-sm sm:text-base text-gray-700 leading-relaxed px-4">
+                </div>
+                
+                {/* Content */}
+                <div className="flex-1 pt-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <item.icon className="w-5 h-5 text-slate-600" />
+                    <h3 className="text-xl font-semibold text-slate-900">
+                      {item.title}
+                    </h3>
+                  </div>
+                  <p className="text-base text-slate-600 leading-relaxed">
                     {item.description}
                   </p>
                 </div>
-                {index < 2 && (
-                  <div className="hidden lg:block absolute top-8 sm:top-10 left-full w-full z-0">
-                    <ArrowRight className="w-6 sm:w-8 h-6 sm:h-8 text-fuchsia-400 mx-auto" />
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -404,26 +487,25 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-violet-700 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="max-w-4xl mx-auto">
+      <section className="py-16 sm:py-20 lg:py-24 bg-slate-900">
+        <div className="container mx-auto px-4 text-center">
+          <div className="max-w-3xl mx-auto">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
               Ready to Transform Your Learning?
             </h2>
-            <p className="text-lg sm:text-xl text-purple-100 mb-8 lg:mb-12 max-w-2xl mx-auto px-4">
+            <p className="text-lg sm:text-xl text-gray-300 mb-10 lg:mb-12 max-w-2xl mx-auto px-4">
               Join thousands of learners who are already using Mercurious AI to accelerate their education and achieve their goals.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
               <Link 
                 href="/process"
-                className="px-6 sm:px-8 py-3 sm:py-4 bg-white text-purple-600 hover:bg-gray-100 text-base sm:text-lg font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-3 shadow-xl"
+                className="px-8 py-4 bg-white text-slate-900 hover:bg-gray-100 text-base sm:text-lg font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-3 shadow-sm"
               >
-                <Sparkles className="w-5 sm:w-6 h-5 sm:h-6" />
+                <MdVideoLibrary className="w-5 sm:w-6 h-5 sm:h-6" />
                 Start Learning Now
               </Link>
-              <button className="px-6 sm:px-8 py-3 sm:py-4 border-2 border-white text-white hover:bg-white hover:text-purple-600 text-base sm:text-lg font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-3">
-                <Users className="w-5 sm:w-6 h-5 sm:h-6" />
+              <button className="px-8 py-4 border-2 border-gray-700 text-white hover:bg-gray-800 text-base sm:text-lg font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-3">
+                <FaUsers className="w-5 sm:w-6 h-5 sm:h-6" />
                 Join Community
               </button>
             </div>
@@ -432,13 +514,13 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 lg:py-12 bg-gray-900 relative">
+      <footer className="py-12 lg:py-16 bg-slate-900">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="sm:col-span-2 lg:col-span-2">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-gradient-to-r from-purple-600 to-fuchsia-600 rounded-lg">
-                  <Brain className="w-6 h-6 text-white" />
+                <div className="p-2 bg-white rounded-lg">
+                  <FaBrain className="w-6 h-6 text-slate-900" />
                 </div>
                 <span className="text-xl font-bold text-white">
                   Mercurious AI
@@ -448,28 +530,28 @@ export default function Home() {
                 Transforming education through intelligent AI-powered learning experiences. 
                 Built with cutting-edge technology and designed for learners of all levels.
               </p>
-              <div className="flex gap-4">
+              <div className="flex gap-3">
                 <a 
                   href="https://github.com/mrnithesh/Mercurious.ai" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="p-2 bg-gray-800 hover:bg-purple-600 rounded-lg transition-colors"
+                  className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
                 >
-                  <Github className="w-5 h-5 text-gray-400 hover:text-white" />
+                  <FaGithub className="w-5 h-5 text-gray-400 hover:text-white" />
                 </a>
                 <a 
                   href="https://www.linkedin.com/in/mrnithesh/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="p-2 bg-gray-800 hover:bg-fuchsia-600 rounded-lg transition-colors"
+                  className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
                 >
-                  <Linkedin className="w-5 h-5 text-gray-400 hover:text-white" />
+                  <FaLinkedin className="w-5 h-5 text-gray-400 hover:text-white" />
                 </a>
                 <a 
                   href="mailto:mr.nithesh.k@gmail.com"
-                  className="p-2 bg-gray-800 hover:bg-violet-600 rounded-lg transition-colors"
+                  className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
                 >
-                  <Mail className="w-5 h-5 text-gray-400 hover:text-white" />
+                  <FaEnvelope className="w-5 h-5 text-gray-400 hover:text-white" />
                 </a>
               </div>
             </div>
@@ -477,27 +559,27 @@ export default function Home() {
             <div>
               <h3 className="text-white font-semibold mb-4">Features</h3>
               <ul className="space-y-2 text-gray-400">
-                <li><Link href="/process" className="hover:text-purple-400 transition-colors text-sm sm:text-base">Video Processing</Link></li>
-                <li><a href="#" className="hover:text-purple-400 transition-colors text-sm sm:text-base">AI Chat</a></li>
-                <li><a href="#" className="hover:text-purple-400 transition-colors text-sm sm:text-base">Quiz Generation</a></li>
-                <li><a href="#" className="hover:text-purple-400 transition-colors text-sm sm:text-base">Study Guides</a></li>
+                <li><Link href="/process" className="hover:text-white transition-colors text-sm sm:text-base">Video Processing</Link></li>
+                <li><a href="#" className="hover:text-white transition-colors text-sm sm:text-base">AI Chat</a></li>
+                <li><a href="#" className="hover:text-white transition-colors text-sm sm:text-base">Quiz Generation</a></li>
+                <li><a href="#" className="hover:text-white transition-colors text-sm sm:text-base">Study Guides</a></li>
               </ul>
             </div>
             
             <div>
               <h3 className="text-white font-semibold mb-4">Support</h3>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-purple-400 transition-colors text-sm sm:text-base">Documentation</a></li>
-                <li><a href="#" className="hover:text-purple-400 transition-colors text-sm sm:text-base">Help Center</a></li>
-                <li><a href="#" className="hover:text-purple-400 transition-colors text-sm sm:text-base">Contact</a></li>
-                <li><a href="#" className="hover:text-purple-400 transition-colors text-sm sm:text-base">Privacy Policy</a></li>
+                <li><a href="#" className="hover:text-white transition-colors text-sm sm:text-base">Documentation</a></li>
+                <li><a href="#" className="hover:text-white transition-colors text-sm sm:text-base">Help Center</a></li>
+                <li><a href="#" className="hover:text-white transition-colors text-sm sm:text-base">Contact</a></li>
+                <li><a href="#" className="hover:text-white transition-colors text-sm sm:text-base">Privacy Policy</a></li>
               </ul>
             </div>
           </div>
           
-          <div className="border-t border-gray-800 mt-8 lg:mt-12 pt-6 lg:pt-8 text-center">
+          <div className="border-t border-slate-800 mt-12 pt-8 text-center">
             <p className="text-gray-400 text-sm sm:text-base">
-              © 2025 Mercurious AI. Built with ❤️ for learners everywhere by Nithesh 💖.
+              © 2025 Mercurious AI. Built with ❤️ for learners everywhere by Nithesh.
             </p>
           </div>
         </div>

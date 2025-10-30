@@ -34,6 +34,7 @@ class QuizResult(BaseModel):
     score: int
     total_questions: int
     correct_answers: List[int]  # indices of correct answers
+    user_answers: List[str]  # user's selected answers
     submitted_at: datetime
     time_taken: int  # seconds
 

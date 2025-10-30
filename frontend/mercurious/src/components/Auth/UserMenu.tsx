@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { User, LogOut, Settings, ChevronDown } from 'lucide-react';
+import { FaUser, FaSignOutAlt, FaCog, FaChevronDown } from 'react-icons/fa';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export const UserMenu: React.FC = () => {
+  const router = useRouter();
   const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -25,6 +27,7 @@ export const UserMenu: React.FC = () => {
     try {
       await signOut();
       setIsOpen(false);
+      router.push('/');
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -37,20 +40,20 @@ export const UserMenu: React.FC = () => {
       {/* User Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-100 to-fuchsia-100 hover:from-purple-200 hover:to-fuchsia-200 rounded-lg transition-all duration-300 border border-purple-200"
+        className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200 border border-gray-200"
       >
-        <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-fuchsia-600 rounded-full flex items-center justify-center">
-          <User className="w-4 h-4 text-white" />
+        <div className="w-8 h-8 bg-slate-900 rounded-full flex items-center justify-center">
+          <FaUser className="w-4 h-4 text-white" />
         </div>
         <div className="hidden sm:block text-left">
-          <p className="text-sm font-medium text-gray-800">
+          <p className="text-sm font-medium text-slate-900">
             {user.displayName || 'User'}
           </p>
           <p className="text-xs text-gray-600 truncate max-w-[150px]">
             {user.email}
           </p>
         </div>
-        <ChevronDown 
+        <FaChevronDown 
           className={`w-4 h-4 text-gray-600 transition-transform duration-200 ${
             isOpen ? 'rotate-180' : ''
           }`} 
@@ -63,11 +66,11 @@ export const UserMenu: React.FC = () => {
           {/* User Info */}
           <div className="px-4 py-3 border-b border-gray-100">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-fuchsia-600 rounded-full flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center">
+                <FaUser className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-800 truncate">
+                <p className="font-medium text-slate-900 truncate">
                   {user.displayName || 'User'}
                 </p>
                 <p className="text-sm text-gray-600 truncate">
@@ -88,7 +91,7 @@ export const UserMenu: React.FC = () => {
               onClick={() => setIsOpen(false)}
               className="w-full flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              <Settings className="w-4 h-4" />
+              <FaCog className="w-4 h-4" />
               <span>Settings</span>
             </button>
             
@@ -96,7 +99,7 @@ export const UserMenu: React.FC = () => {
               onClick={handleSignOut}
               className="w-full flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
             >
-              <LogOut className="w-4 h-4" />
+              <FaSignOutAlt className="w-4 h-4" />
               <span>Sign Out</span>
             </button>
           </div>

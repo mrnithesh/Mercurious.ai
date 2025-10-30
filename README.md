@@ -32,6 +32,17 @@ Mercurious.ai is a revolutionary AI-powered learning platform that transforms an
 - **Vocabulary Extraction**: Identify and define important terms
 - **Learning Analytics**: Track learning progress and comprehension
 
+### 🎯 **AI-Powered Quiz System**
+- **Intelligent Quiz Generation**: AI-generated quizzes tailored to video content using Google Gemini
+- **Customizable Quiz Settings**: Configure number of questions (3-15) based on your learning needs
+- **Multiple Question Types**: Factual recall, conceptual understanding, and application-based questions
+- **Interactive Quiz Interface**: Clean, user-friendly interface with keyboard navigation support
+- **Real-time Progress Tracking**: Visual progress bar showing completion status
+- **Detailed Results & Analytics**: Comprehensive score breakdown with performance insights
+- **Quiz History**: Track all quiz attempts with trend analysis and performance metrics
+- **Statistics Dashboard**: View overall performance, best scores, averages, and learning insights
+- **Smart Recommendations**: AI-powered suggestions for improvement based on performance
+
 ### 📚 **Personal Learning Library**
 - **Video Library Management**: Organize and manage your processed videos
 - **Progress Tracking**: Monitor your learning progress across all videos
@@ -56,7 +67,6 @@ Mercurious.ai is a revolutionary AI-powered learning platform that transforms an
 
 We are actively working to make Mercurious.ai even better! Here are some features planned for future releases:
 
-- **📝 Quiz System**: AI-generated quizzes for every video to test your understanding and reinforce learning
 - **⚙️ User Settings**: Personalize your experience with theme, notification, and privacy preferences
 - **👤 Profile Management**: Edit your profile, view learning stats, and manage your account
 - **📒 Notes Editor**: Rich text note-taking and annotation tools for each video
@@ -84,12 +94,14 @@ backend/
 │   ├── routers/               # API route handlers
 │   │   ├── auth.py            # Authentication endpoints
 │   │   ├── videos.py          # Video processing endpoints
-│   │   └── chat.py            # Chat interaction endpoints
+│   │   ├── chat.py            # Chat interaction endpoints
+│   │   └── quiz.py            # Quiz generation and submission endpoints
 │   ├── services/              # Business logic services
 │   │   ├── auth_service.py    # User authentication service
 │   │   ├── video_services.py  # Video processing service
 │   │   ├── transcript_services.py # AI transcript processing
 │   │   ├── chat_service.py    # Chat interaction service
+│   │   ├── quiz_service.py     # Quiz generation and evaluation service
 │   │   └── video_database_service.py # Database operations
 │   ├── config/                # Configuration files
 │   │   └── firebase_config.py # Firebase configuration
@@ -109,6 +121,12 @@ frontend/mercurious/
 │   │   └── layout.tsx        # Root layout
 │   ├── components/           # Reusable UI components
 │   │   ├── Auth/             # Authentication components
+│   │   ├── Quiz/             # Quiz components
+│   │   │   ├── QuizGenerator.tsx    # Quiz generation interface
+│   │   │   ├── QuizInterface.tsx    # Interactive quiz taking interface
+│   │   │   ├── QuizResults.tsx      # Quiz results and analytics
+│   │   │   ├── QuizHistory.tsx      # Quiz attempt history
+│   │   │   └── QuizStatistics.tsx   # Performance statistics
 │   │   ├── ChatAssistant.tsx # AI chat interface
 │   │   └── ProtectedRoute.tsx # Route protection
 │   ├── contexts/             # React contexts
@@ -138,7 +156,7 @@ frontend/mercurious/
 - **React 19**: Latest React with modern features
 - **Tailwind CSS**: Utility-first CSS framework
 - **Firebase SDK**: Client-side Firebase integration
-- **Lucide React**: Modern icon library
+- **React Icons**: Comprehensive icon library (Font Awesome, Material Design)
 - **React Window**: Virtual scrolling for performance
 
 ### **Infrastructure & Services**
@@ -183,7 +201,7 @@ cp .env.example .env
 ```bash
 # Backend .env
 GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-2.0-flash
+GEMINI_MODEL=gemini-2.5-flash
 YOUTUBE_DATA_API=your_youtube_api_key
 FIREBASE_PROJECT_ID=your_firebase_project_id
 FIREBASE_SERVICE_ACCOUNT_PATH=path_to_firebase_service_account_json
@@ -250,7 +268,7 @@ Have a feature request? [Open an issue](https://github.com/mrnithesh/Mercurious-
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU General Public License v3.0 (GPLv3) - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
@@ -267,7 +285,7 @@ For support, contact on linkedin [Nithesh K](https://www.linkedin.com/in/mrnithe
 ---
 
 <div align="center">
-  <p>Built with ❤️ by the Mercurious.ai Team</p>
+  <p>Built with ❤️ by <a href="https://www.linkedin.com/in/mrnithesh/">Nithesh K</a></p>
   <p>Making learning more accessible and engaging through AI</p>
 </div> 
 

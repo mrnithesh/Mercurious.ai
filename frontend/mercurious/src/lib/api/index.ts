@@ -4,6 +4,7 @@ export * from './types';
 // Export services for direct use
 export { VideoAPIService } from './services/video';
 export { ChatAPIService } from './services/chat';
+export { QuizAPIService } from './services/quiz';
 export { BaseAPIClient } from './base';
 
 // Export main client

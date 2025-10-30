@@ -2,16 +2,17 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { 
-  MessageCircle, 
-  Send, 
-  Trash2, 
-  Bot, 
-  User, 
-  Loader2,
-  Minimize2,
-  Maximize2
-} from 'lucide-react';
+  FaComments,
+  FaPaperPlane,
+  FaTrash,
+  FaRobot,
+  FaUser,
+  FaSpinner,
+  FaWindowMinimize,
+  FaWindowMaximize
+} from 'react-icons/fa';
 import { apiClient, ChatMessage, ChatHistory } from '@/lib/api';
+import { useToast } from '@/contexts/ToastContext';
 
 interface ChatAssistantProps {
   videoId: string;
@@ -19,6 +20,7 @@ interface ChatAssistantProps {
 }
 
 export default function ChatAssistant({ videoId, videoContext }: ChatAssistantProps) {
+  const { showError } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -102,6 +104,7 @@ export default function ChatAssistant({ videoId, videoContext }: ChatAssistantPr
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to send message';
       setError(errorMessage);
+      showError(errorMessage);
       
       // Remove the user message if sending failed
       setMessages(prev => prev.slice(0, -1));
@@ -116,7 +119,7 @@ export default function ChatAssistant({ videoId, videoContext }: ChatAssistantPr
       setMessages([]);
       setError(null);
     } catch (err) {
-      console.error('Failed to clear chat:', err);
+      showError('Failed to clear chat history');
     }
   };
 
@@ -139,9 +142,10 @@ export default function ChatAssistant({ videoId, videoContext }: ChatAssistantPr
       <div className="fixed bottom-4 right-4 z-50">
         <button
           onClick={() => setIsMinimized(false)}
-          className="bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+          className="bg-slate-900 text-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+          aria-label="Open chat assistant"
         >
-          <MessageCircle className="w-6 h-6" />
+          <FaComments className="w-6 h-6" />
         </button>
       </div>
     );
@@ -149,11 +153,11 @@ export default function ChatAssistant({ videoId, videoContext }: ChatAssistantPr
 
   return (
     <div className="fixed bottom-4 right-4 z-50 w-96 max-w-[calc(100vw-2rem)]">
-      <div className="bg-white rounded-lg shadow-2xl border border-purple-200 flex flex-col h-96">
+      <div className="bg-white rounded-xl shadow-lg border border-gray-200 flex flex-col h-96">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white p-4 rounded-t-lg flex items-center justify-between">
+        <div className="bg-slate-900 text-white p-4 rounded-t-xl flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Bot className="w-5 h-5" />
+            <FaRobot className="w-5 h-5" />
             <span className="font-semibold">AI Assistant</span>
           </div>
           <div className="flex items-center gap-2">
@@ -161,15 +165,17 @@ export default function ChatAssistant({ videoId, videoContext }: ChatAssistantPr
               onClick={clearChat}
               className="p-1 hover:bg-white/20 rounded transition-colors"
               title="Clear chat"
+              aria-label="Clear chat history"
             >
-              <Trash2 className="w-4 h-4" />
+              <FaTrash className="w-4 h-4" />
             </button>
             <button
               onClick={() => setIsMinimized(true)}
               className="p-1 hover:bg-white/20 rounded transition-colors"
               title="Minimize"
+              aria-label="Minimize chat window"
             >
-              <Minimize2 className="w-4 h-4" />
+              <FaWindowMinimize className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -178,10 +184,13 @@ export default function ChatAssistant({ videoId, videoContext }: ChatAssistantPr
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {messages.length === 0 ? (
             <div className="text-center text-gray-500 py-8">
-              <Bot className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p className="text-sm">
+              <div className="p-3 bg-slate-100 rounded-full w-fit mx-auto mb-4">
+                <FaRobot className="w-10 h-10 text-slate-600" />
+              </div>
+              <h4 className="font-semibold text-slate-900 mb-2">AI Learning Assistant</h4>
+              <p className="text-sm text-gray-600 max-w-xs mx-auto leading-relaxed">
                 Hi! I'm here to help you understand the video content. 
-                Ask me anything about what you've watched!
+                Ask me anything about what you've watched, and I'll provide detailed explanations!
               </p>
             </div>
           ) : (
@@ -193,21 +202,21 @@ export default function ChatAssistant({ videoId, videoContext }: ChatAssistantPr
                 }`}
               >
                 {message.role === 'assistant' && (
-                  <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-fuchsia-600 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-4 h-4 text-white" />
+                  <div className="w-8 h-8 bg-slate-900 rounded-full flex items-center justify-center flex-shrink-0">
+                    <FaRobot className="w-4 h-4 text-white" />
                   </div>
                 )}
                 
                 <div
                   className={`max-w-[80%] p-3 rounded-lg ${
                     message.role === 'user'
-                      ? 'bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white'
+                      ? 'bg-slate-900 text-white'
                       : 'bg-gray-100 text-gray-900'
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                   <span className={`text-xs opacity-70 mt-1 block ${
-                    message.role === 'user' ? 'text-purple-100' : 'text-gray-500'
+                    message.role === 'user' ? 'text-gray-300' : 'text-gray-500'
                   }`}>
                     {formatTimestamp(message.timestamp)}
                   </span>
@@ -215,7 +224,7 @@ export default function ChatAssistant({ videoId, videoContext }: ChatAssistantPr
 
                 {message.role === 'user' && (
                   <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4 text-gray-600" />
+                    <FaUser className="w-4 h-4 text-gray-600" />
                   </div>
                 )}
               </div>
@@ -224,12 +233,12 @@ export default function ChatAssistant({ videoId, videoContext }: ChatAssistantPr
           
           {isLoading && (
             <div className="flex gap-3 justify-start">
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-fuchsia-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <Bot className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 bg-slate-900 rounded-full flex items-center justify-center flex-shrink-0">
+                <FaRobot className="w-4 h-4 text-white" />
               </div>
               <div className="bg-gray-100 p-3 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
+                  <FaSpinner className="w-4 h-4 animate-spin text-slate-900" />
                   <span className="text-sm text-gray-600">Thinking...</span>
                 </div>
               </div>
@@ -254,16 +263,16 @@ export default function ChatAssistant({ videoId, videoContext }: ChatAssistantPr
               onKeyPress={handleKeyPress}
               placeholder="Ask me about the video..."
               disabled={isLoading}
-              className="flex-1 p-2 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 text-sm text-gray-900 placeholder-gray-500"
+              className="flex-1 p-2 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 text-sm text-slate-900 placeholder-gray-500"
               rows={1}
               style={{ minHeight: '40px', maxHeight: '100px' }}
             />
             <button
               onClick={sendMessage}
               disabled={!inputMessage.trim() || isLoading}
-              className="bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white p-2 rounded-lg hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-slate-900 hover:bg-slate-800 text-white p-2 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
             >
-              <Send className="w-4 h-4" />
+              <FaPaperPlane className="w-4 h-4" />
             </button>
           </div>
         </div>
