@@ -538,13 +538,6 @@ ${video.content.analysis}
               </div>
               
               <div className="flex items-center gap-4">
-                <Link 
-                  href="/dashboard"
-                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-slate-900 transition-colors font-medium"
-                >
-                  <FaArrowLeft className="w-4 h-4" />
-                  Back to Dashboard
-                </Link>
                 <div className="hidden md:flex items-center">
                   <UserMenu />
                 </div>
