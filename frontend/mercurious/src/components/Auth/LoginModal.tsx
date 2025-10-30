@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { FaTimes, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaSignInAlt, FaExclamationCircle, FaGoogle, FaArrowLeft, FaCheckCircle } from 'react-icons/fa';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAuthErrorMessage } from '@/lib/firebase/auth';
@@ -12,6 +13,7 @@ interface LoginModalProps {
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegister }) => {
+  const router = useRouter();
   const { signIn, signInWithGoogle, resetPassword, loading, error, clearError } = useAuth();
   const [view, setView] = useState<'login' | 'forgot-password'>('login');
   const [formData, setFormData] = useState({
@@ -59,6 +61,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitc
       await signIn(formData.email, formData.password);
       onClose();
       setFormData({ email: '', password: '' });
+      router.push('/dashboard');
     } catch (err: any) {
       setLocalError(getAuthErrorMessage(err.code));
     }
@@ -98,6 +101,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitc
     try {
       await signInWithGoogle();
       onClose();
+      router.push('/dashboard');
     } catch (err: any) {
       // Error is handled by context, but we can add local handling if needed
       if (err.code !== 'auth/popup-closed-by-user') {

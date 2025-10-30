@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { FaTimes, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaUserPlus, FaUser, FaExclamationCircle, FaCheckCircle, FaGoogle } from 'react-icons/fa';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAuthErrorMessage } from '@/lib/firebase/auth';
@@ -12,6 +13,7 @@ interface RegisterModalProps {
 }
 
 export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitchToLogin }) => {
+  const router = useRouter();
   const { signUp, signInWithGoogle, loading, error, clearError } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
@@ -88,6 +90,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
       await signUp(formData.email, formData.password, formData.name);
       onClose();
       setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+      router.push('/dashboard');
     } catch (err: any) {
       setLocalError(getAuthErrorMessage(err.code));
     }
@@ -104,6 +107,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, o
     try {
       await signInWithGoogle();
       onClose();
+      router.push('/dashboard');
     } catch (err: any) {
       // Error is handled by context, but we can add local handling if needed
       if (err.code !== 'auth/popup-closed-by-user') {

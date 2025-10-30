@@ -4,27 +4,29 @@ import { useState, useEffect, useMemo, useRef, memo, useCallback } from 'react';
 import Link from 'next/link';
 import { FixedSizeGrid as Grid } from 'react-window';
 import { 
-  Brain, 
-  Video, 
-  Star, 
-  Search, 
-  Play, 
-  TrendingUp,
-  Clock,
-  BookOpen,
-  Plus,
-  Eye,
-  CheckCircle,
-  Home,
-  Library,
-  BarChart3,
-  Filter,
-  MoreVertical,
-  Trash2
-} from 'lucide-react';
+  FaBrain, 
+  FaYoutube, 
+  FaStar, 
+  FaSearch, 
+  FaPlay, 
+  FaChartLine,
+  FaClock,
+  FaBookOpen,
+  FaPlus,
+  FaEye,
+  FaCheckCircle,
+  FaHome,
+  FaEllipsisV,
+  FaTrash
+} from 'react-icons/fa';
+import { 
+  MdVideoLibrary,
+  MdFilterList
+} from 'react-icons/md';
 import { apiClient, VideoLibraryItem } from '@/lib/api';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
+import { UserMenu } from '@/components/Auth';
 
 // Helper function to calculate stats from video library
 function calculateStats(videos: VideoLibraryItem[]) {
@@ -95,16 +97,16 @@ function LazyImage({ src, alt, className, onError }: {
           }`}
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-400 to-fuchsia-500">
-          <Video className="w-12 h-12 text-white" />
+        <div className="w-full h-full flex items-center justify-center bg-slate-700">
+          <FaYoutube className="w-12 h-12 text-white" />
         </div>
       )}
       
       {/* Loading placeholder */}
       {inView && !loaded && !error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-400 to-fuchsia-500">
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-700">
           <div className="animate-pulse">
-            <Video className="w-12 h-12 text-white opacity-50" />
+            <FaYoutube className="w-12 h-12 text-white opacity-50" />
           </div>
         </div>
       )}
@@ -145,11 +147,11 @@ interface StatCardProps {
 
 function StatCard({ title, value, icon: Icon, color, description }: StatCardProps) {
   return (
-    <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-100">
+    <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-          <p className="text-3xl font-bold text-gray-900">{value}</p>
+          <p className="text-3xl font-bold text-slate-900">{value}</p>
           <p className="text-xs text-gray-500 mt-1">{description}</p>
         </div>
         <div className={`p-3 rounded-full ${color}`}>
@@ -201,10 +203,10 @@ const VideoCard = memo(function VideoCard({ video, onRemove, onToggleFavorite, s
   }, []);
 
   return (
-    <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-100 overflow-hidden group">
+    <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 overflow-hidden group">
       {/* Thumbnail */}
       <div className="relative">
-        <div className="aspect-video bg-gradient-to-br from-purple-400 to-fuchsia-500 flex items-center justify-center overflow-hidden">
+        <div className="aspect-video bg-slate-700 flex items-center justify-center overflow-hidden">
           {video.thumbnail_url ? (
             <LazyImage
               src={video.thumbnail_url}
@@ -213,8 +215,8 @@ const VideoCard = memo(function VideoCard({ video, onRemove, onToggleFavorite, s
               onError={handleImageError}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-400 to-fuchsia-500">
-              <Video className="w-12 h-12 text-white" />
+            <div className="w-full h-full flex items-center justify-center bg-slate-700">
+              <FaYoutube className="w-12 h-12 text-white" />
             </div>
           )}
         </div>
@@ -223,7 +225,7 @@ const VideoCard = memo(function VideoCard({ video, onRemove, onToggleFavorite, s
         {video.progress > 0 && (
           <div className="absolute bottom-0 left-0 right-0 h-2 bg-black bg-opacity-20">
             <div 
-              className="h-full bg-gradient-to-r from-purple-500 to-fuchsia-500 transition-all duration-300"
+              className="h-full bg-slate-900 transition-all duration-300"
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
@@ -242,7 +244,7 @@ const VideoCard = memo(function VideoCard({ video, onRemove, onToggleFavorite, s
           disabled={isTogglingFavorite}
           className="absolute top-3 left-3 p-2 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full transition-all duration-200"
         >
-          <Star 
+          <FaStar 
             className={`w-4 h-4 transition-colors ${
               video.is_favorite 
                 ? 'text-yellow-400 fill-current' 
@@ -258,7 +260,7 @@ const VideoCard = memo(function VideoCard({ video, onRemove, onToggleFavorite, s
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full transition-all duration-200"
             >
-              <MoreVertical className="w-4 h-4 text-white" />
+              <FaEllipsisV className="w-4 h-4 text-white" />
             </button>
 
             {/* Dropdown menu */}
@@ -270,7 +272,7 @@ const VideoCard = memo(function VideoCard({ video, onRemove, onToggleFavorite, s
                     className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <Play className="w-4 h-4" />
+                    <FaPlay className="w-4 h-4" />
                     View Details
                   </Link>
                   <button
@@ -278,7 +280,7 @@ const VideoCard = memo(function VideoCard({ video, onRemove, onToggleFavorite, s
                     disabled={isTogglingFavorite}
                     className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
                   >
-                    <Star className="w-4 h-4" />
+                    <FaStar className="w-4 h-4" />
                     {video.is_favorite ? 'Remove from Favorites' : 'Add to Favorites'}
                   </button>
                   <button
@@ -286,7 +288,7 @@ const VideoCard = memo(function VideoCard({ video, onRemove, onToggleFavorite, s
                     disabled={isRemoving}
                     className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <FaTrash className="w-4 h-4" />
                     Remove from Library
                   </button>
                 </div>
@@ -304,7 +306,7 @@ const VideoCard = memo(function VideoCard({ video, onRemove, onToggleFavorite, s
       {/* Content */}
       <div className="p-4">
         <Link href={`/video/${video.video_id}`} className="block group">
-          <h3 className="font-semibold text-gray-900 line-clamp-2 group-hover:text-purple-600 transition-colors mb-2 text-sm">
+          <h3 className="font-semibold text-slate-900 line-clamp-2 group-hover:text-blue-600 transition-colors mb-2 text-sm">
             {video.title}
           </h3>
           <p className="text-sm text-gray-600 mb-3">{video.author}</p>
@@ -318,13 +320,13 @@ const VideoCard = memo(function VideoCard({ video, onRemove, onToggleFavorite, s
           <div className="flex items-center gap-3">
             {video.notes && (
               <div className="flex items-center gap-1">
-                <BookOpen className="w-3 h-3 text-blue-500" />
+                <FaBookOpen className="w-3 h-3 text-blue-500" />
                 <span>Notes</span>
               </div>
             )}
             {video.progress > 0 && (
               <div className="flex items-center gap-1">
-                <Eye className="w-3 h-3 text-green-500" />
+                <FaEye className="w-3 h-3 text-green-500" />
                 <span>{progressPercentage}%</span>
               </div>
             )}
@@ -335,7 +337,7 @@ const VideoCard = memo(function VideoCard({ video, onRemove, onToggleFavorite, s
       {/* Loading overlay */}
       {(isRemoving || isTogglingFavorite) && (
         <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-slate-900"></div>
         </div>
       )}
     </div>
@@ -357,11 +359,11 @@ function VideoSection({ title, videos, showAll = false, onRemove, onToggleFavori
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+        <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
         {videos.length > 6 && (
           <button
             onClick={() => setShowAllVideos(!showAllVideos)}
-            className="text-purple-600 hover:text-purple-700 text-sm font-medium transition-colors"
+            className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
           >
             {showAllVideos ? 'Show Less' : `View All ${videos.length}`} →
           </button>
@@ -556,9 +558,9 @@ export default function UnifiedDashboard() {
   if (loading) {
     return (
       <ProtectedRoute>
-        <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 flex items-center justify-center">
+        <div className="min-h-screen bg-white flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-200 border-t-slate-900 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading your dashboard...</p>
           </div>
         </div>
@@ -569,15 +571,15 @@ export default function UnifiedDashboard() {
   if (error) {
     return (
       <ProtectedRoute>
-        <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 flex items-center justify-center">
+        <div className="min-h-screen bg-white flex items-center justify-center">
           <div className="text-center">
             <div className="p-3 bg-red-100 rounded-full w-fit mx-auto mb-4">
-              <Brain className="w-8 h-8 text-red-600" />
+              <FaBrain className="w-8 h-8 text-red-600" />
             </div>
             <p className="text-red-600 mb-4">{error}</p>
             <button 
               onClick={loadDashboard}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors shadow-sm hover:shadow-md"
             >
               Try Again
             </button>
@@ -592,29 +594,30 @@ export default function UnifiedDashboard() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50">
+      <div className="min-h-screen bg-white">
         {/* Navigation */}
-        <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-purple-200/50 shadow-lg shadow-purple-100/50">
+        <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-6">
                 <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                  <div className="p-2 bg-gradient-to-r from-purple-600 to-fuchsia-600 rounded-xl shadow-lg">
-                    <Brain className="w-5 sm:w-6 h-5 sm:h-6 text-white" />
+                  <div className="p-2 bg-slate-900 rounded-lg shadow-sm">
+                    <FaBrain className="w-5 sm:w-6 h-5 sm:h-6 text-white" />
                   </div>
-                  <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
+                  <span className="text-lg sm:text-xl font-bold text-slate-900">
                     Mercurious AI
                   </span>
                 </Link>
                 <div className="hidden md:flex items-center gap-4">
-                  <Link href="/dashboard" className="flex items-center gap-2 px-3 py-2 bg-purple-100 text-purple-700 rounded-lg">
-                    <Home className="w-4 h-4" />
+                  <Link href="/dashboard" className="flex items-center gap-2 px-3 py-2 bg-slate-900 text-white rounded-lg">
+                    <FaHome className="w-4 h-4" />
                     Dashboard
                   </Link>
-                  <Link href="/process" className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
-                    <Plus className="w-4 h-4" />
+                  <Link href="/process" className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-slate-900 hover:bg-gray-50 rounded-lg transition-colors">
+                    <FaPlus className="w-4 h-4" />
                     Process Video
                   </Link>
+                  <UserMenu />
                 </div>
               </div>
             </div>
@@ -624,7 +627,7 @@ export default function UnifiedDashboard() {
         <div className="container mx-auto px-4 py-8 max-w-7xl">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
               Welcome back! 👋
             </h1>
             <p className="text-lg text-gray-600">
@@ -637,36 +640,36 @@ export default function UnifiedDashboard() {
             <StatCard
               title="Total Videos"
               value={stats.totalVideos}
-              icon={Video}
-              color="bg-gradient-to-r from-blue-500 to-blue-600"
+              icon={FaYoutube}
+              color="bg-blue-500"
               description="Videos in library"
             />
             <StatCard
               title="In Progress"
               value={stats.inProgressCount}
-              icon={Play}
-              color="bg-gradient-to-r from-orange-500 to-red-500"
+              icon={FaPlay}
+              color="bg-orange-500"
               description="Currently watching"
             />
             <StatCard
               title="Favorites"
               value={stats.favoritesCount}
-              icon={Star}
-              color="bg-gradient-to-r from-yellow-500 to-orange-500"
+              icon={FaStar}
+              color="bg-yellow-500"
               description="Starred videos"
             />
             <StatCard
               title="Watched"
               value={stats.watchedCount}
-              icon={Eye}
-              color="bg-gradient-to-r from-green-500 to-emerald-500"
+              icon={FaEye}
+              color="bg-green-500"
               description="Videos started"
             />
             <StatCard
               title="Completed"
               value={stats.completedCount}
-              icon={CheckCircle}
-              color="bg-gradient-to-r from-purple-500 to-fuchsia-500"
+              icon={FaCheckCircle}
+              color="bg-slate-600"
               description="Videos finished"
             />
           </div>
@@ -674,13 +677,13 @@ export default function UnifiedDashboard() {
           {/* Quick Actions */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <Link href="/process" className="group">
-              <div className="bg-white rounded-xl p-6 border border-purple-100 hover:border-purple-300 hover:shadow-lg transition-all duration-300">
+              <div className="bg-white rounded-xl p-6 border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-300">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-r from-purple-500 to-fuchsia-500 rounded-lg">
-                    <Plus className="w-6 h-6 text-white" />
+                  <div className="p-3 bg-slate-900 rounded-lg">
+                    <FaPlus className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
+                    <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
                       Process New Video
                     </h3>
                     <p className="text-sm text-gray-600">Add a YouTube video to your library</p>
@@ -689,13 +692,13 @@ export default function UnifiedDashboard() {
               </div>
             </Link>
 
-            <div className="bg-white rounded-xl p-6 border border-purple-100">
+            <div className="bg-white rounded-xl p-6 border border-gray-200">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg">
-                  <BarChart3 className="w-6 h-6 text-white" />
+                <div className="p-3 bg-blue-500 rounded-lg">
+                  <FaChartLine className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">
+                  <h3 className="font-semibold text-slate-900">
                     Learning Progress
                   </h3>
                   <p className="text-sm text-gray-600">
@@ -705,13 +708,13 @@ export default function UnifiedDashboard() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-6 border border-purple-100">
+            <div className="bg-white rounded-xl p-6 border border-gray-200">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
-                  <TrendingUp className="w-6 h-6 text-white" />
+                <div className="p-3 bg-emerald-500 rounded-lg">
+                  <FaChartLine className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">
+                  <h3 className="font-semibold text-slate-900">
                     Watch Time
                   </h3>
                   <p className="text-sm text-gray-600">
@@ -744,29 +747,29 @@ export default function UnifiedDashboard() {
               {/* All Videos with Search and Filters */}
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">All Videos</h2>
+                  <h2 className="text-xl font-semibold text-slate-900">All Videos</h2>
                   <Link
                     href="/process"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-fuchsia-700 transition-all duration-300"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
                   >
-                    <Plus className="w-4 h-4" />
+                    <FaPlus className="w-4 h-4" />
                     Add Video
                   </Link>
                 </div>
 
                 {/* Search and Filters */}
-                <div className="bg-white rounded-xl p-6 shadow-lg border border-purple-100 mb-6">
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mb-6">
                   <div className="flex flex-col lg:flex-row gap-4">
                     {/* Search */}
                     <div className="flex-1">
                       <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                         <input
                           type="text"
                           placeholder="Search videos by title or author..."
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
-                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900"
                         />
                       </div>
                     </div>
@@ -782,7 +785,7 @@ export default function UnifiedDashboard() {
                             : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
                         }`}
                       >
-                        <Star className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
+                        <FaStar className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
                         Favorites
                       </button>
 
@@ -790,7 +793,7 @@ export default function UnifiedDashboard() {
                       <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as any)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900"
                       >
                         <option value="newest">Newest First</option>
                         <option value="oldest">Oldest First</option>
@@ -810,11 +813,11 @@ export default function UnifiedDashboard() {
                   />
                 ) : videos.length === 0 ? null : (
                   /* Empty State - No filtered results */
-                  <div className="bg-white rounded-xl p-12 text-center shadow-lg border border-purple-100">
+                  <div className="bg-white rounded-xl p-12 text-center shadow-sm border border-gray-200">
                     <div className="p-4 bg-gray-100 rounded-full w-fit mx-auto mb-6">
-                      <Search className="w-12 h-12 text-gray-600" />
+                      <FaSearch className="w-12 h-12 text-gray-600" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    <h3 className="text-xl font-semibold text-slate-900 mb-2">
                       No videos found
                     </h3>
                     <p className="text-gray-600 mb-6 max-w-md mx-auto">
@@ -825,7 +828,7 @@ export default function UnifiedDashboard() {
                         setSearchTerm('');
                         setShowFavoritesOnly(false);
                       }}
-                      className="px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors"
+                      className="px-6 py-3 bg-slate-900 text-white font-medium rounded-lg hover:bg-slate-800 transition-colors shadow-sm hover:shadow-md"
                     >
                       Clear Filters
                     </button>
@@ -835,11 +838,11 @@ export default function UnifiedDashboard() {
             </>
           ) : (
             /* Empty State - No videos */
-            <div className="bg-white rounded-xl p-12 text-center shadow-lg border border-purple-100">
-              <div className="p-4 bg-purple-100 rounded-full w-fit mx-auto mb-6">
-                <Video className="w-12 h-12 text-purple-600" />
+            <div className="bg-white rounded-xl p-12 text-center shadow-sm border border-gray-200">
+              <div className="p-4 bg-gray-100 rounded-full w-fit mx-auto mb-6">
+                <FaYoutube className="w-12 h-12 text-gray-600" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">
                 Welcome to Mercurious AI!
               </h3>
               <p className="text-gray-600 mb-6 max-w-md mx-auto">
@@ -848,9 +851,9 @@ export default function UnifiedDashboard() {
               </p>
               <Link 
                 href="/process"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-fuchsia-700 transition-all duration-300 transform hover:scale-105"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
               >
-                <Plus className="w-5 h-5" />
+                <FaPlus className="w-5 h-5" />
                 Process Your First Video
               </Link>
             </div>

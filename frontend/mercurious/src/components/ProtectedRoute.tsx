@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoginModal, RegisterModal } from '@/components/Auth';
-import { Brain } from 'lucide-react';
+import { FaBrain } from 'react-icons/fa';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -44,12 +44,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   // Show loading spinner while auth is not initialized or still loading
   if (!initialized || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="p-3 bg-gradient-to-r from-purple-600 to-fuchsia-600 rounded-xl w-fit mx-auto mb-4 animate-pulse">
-            <Brain className="w-8 h-8 text-white" />
+          <div className="p-3 bg-slate-900 rounded-xl w-fit mx-auto mb-4 animate-pulse">
+            <FaBrain className="w-8 h-8 text-white" />
           </div>
-          <div className="w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-4 border-gray-200 border-t-slate-900 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">
             {!initialized ? 'Initializing authentication...' : 'Checking authentication...'}
           </p>
@@ -65,12 +65,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // If user is not authenticated, show authentication prompt
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center">
-        <div className="p-3 bg-gradient-to-r from-purple-600 to-fuchsia-600 rounded-xl w-fit mx-auto mb-6">
-          <Brain className="w-12 h-12 text-white" />
+        <div className="p-3 bg-slate-900 rounded-xl w-fit mx-auto mb-6">
+          <FaBrain className="w-12 h-12 text-white" />
         </div>
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-fuchsia-600 bg-clip-text text-transparent mb-4">
+        <h1 className="text-2xl font-bold text-slate-900 mb-4">
           Authentication Required
         </h1>
         <p className="text-gray-600 mb-8">
@@ -79,19 +79,19 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         <div className="space-y-4">
           <button
             onClick={openLoginModal}
-            className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105"
+            className="w-full px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
           >
             Sign In
           </button>
           <button
             onClick={openRegisterModal}
-            className="w-full px-6 py-3 border-2 border-purple-600 text-purple-600 hover:bg-purple-50 font-semibold rounded-lg transition-all duration-300"
+            className="w-full px-6 py-3 border-2 border-slate-900 text-slate-900 hover:bg-slate-50 font-semibold rounded-lg transition-all duration-200"
           >
             Create Account
           </button>
           <button
             onClick={() => window.location.href = '/'}
-            className="w-full px-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors"
+            className="w-full px-6 py-3 text-gray-600 hover:text-slate-900 font-medium transition-colors"
           >
             Return to Home
           </button>
