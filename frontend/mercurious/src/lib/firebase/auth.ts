@@ -6,7 +6,9 @@ import {
   User,
   updateProfile,
   sendPasswordResetEmail,
-  updatePassword
+  updatePassword,
+  signInWithPopup,
+  GoogleAuthProvider
 } from 'firebase/auth';
 import { auth } from './config';
 
@@ -132,6 +134,28 @@ export const getCurrentUserToken = async (): Promise<string | null> => {
   }
 };
 
+// Sign in with Google
+export const signInWithGoogle = async () => {
+  try {
+    if (typeof window === 'undefined' || !auth) {
+      throw new Error('Firebase not available');
+    }
+    
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
+    
+    const result = await signInWithPopup(auth, provider);
+    return result.user;
+  } catch (error: any) {
+    throw {
+      code: error.code,
+      message: error.message,
+    } as AuthError;
+  }
+};
+
 // Listen to auth state changes
 export const onAuthStateChange = (callback: (user: UserData | null) => void) => {
   if (typeof window === 'undefined' || !auth) {
@@ -160,6 +184,14 @@ export const getAuthErrorMessage = (errorCode: string): string => {
       return 'Too many failed attempts. Please try again later.';
     case 'auth/network-request-failed':
       return 'Network error. Please check your connection.';
+    case 'auth/popup-closed-by-user':
+      return 'Sign-in popup was closed. Please try again.';
+    case 'auth/cancelled-popup-request':
+      return 'Only one popup request is allowed at a time.';
+    case 'auth/user-not-found':
+      return 'No account found with this email address.';
+    case 'auth/invalid-email':
+      return 'Please enter a valid email address.';
     default:
       return 'An unexpected error occurred. Please try again.';
   }

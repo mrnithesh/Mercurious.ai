@@ -8,7 +8,9 @@ import {
   onAuthStateChange, 
   UserData,
   getCurrentUserToken,
-  AuthError
+  AuthError,
+  signInWithGoogle,
+  resetPassword
 } from '@/lib/firebase/auth';
 
 interface AuthContextType {
@@ -17,6 +19,8 @@ interface AuthContextType {
   initialized: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   getToken: () => Promise<string | null>;
   error: string | null;
@@ -96,6 +100,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const handleSignInWithGoogle = async () => {
+    if (!isClient) throw new Error('Authentication not available on server');
+    
+    try {
+      setError(null);
+      setLoading(true);
+      await signInWithGoogle();
+    } catch (err: any) {
+      // Don't show error for popup-closed-by-user
+      if (err.code !== 'auth/popup-closed-by-user') {
+        setError(err.message || 'Failed to sign in with Google');
+      }
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (email: string) => {
+    if (!isClient) throw new Error('Authentication not available on server');
+    
+    try {
+      setError(null);
+      setLoading(true);
+      await resetPassword(email);
+    } catch (err: any) {
+      setError(err.message || 'Failed to send password reset email');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signOut = async () => {
     if (!isClient) throw new Error('Authentication not available on server');
     
@@ -125,6 +162,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initialized,
     signIn,
     signUp,
+    signInWithGoogle: handleSignInWithGoogle,
+    resetPassword: handleResetPassword,
     signOut,
     getToken,
     error,
