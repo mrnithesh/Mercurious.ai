@@ -617,8 +617,10 @@ export default function UnifiedDashboard() {
                     <FaPlus className="w-4 h-4" />
                     Process Video
                   </Link>
-                  <UserMenu />
                 </div>
+              </div>
+              <div className="hidden md:flex items-center">
+                <UserMenu />
               </div>
             </div>
           </div>

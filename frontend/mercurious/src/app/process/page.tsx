@@ -14,9 +14,6 @@ import {
   FaPlus,
   FaSpinner
 } from 'react-icons/fa';
-import { 
-  MdVideoLibrary 
-} from 'react-icons/md';
 import { apiClient } from '@/lib/api';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { UserMenu } from '@/components/Auth';
@@ -93,16 +90,14 @@ export default function ProcessVideo() {
                     <FaHome className="w-4 h-4" />
                     Dashboard
                   </Link>
-                  <Link href="/dashboard" className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-slate-900 hover:bg-gray-50 rounded-lg transition-colors">
-                    <MdVideoLibrary className="w-4 h-4" />
-                    Library
-                  </Link>
                   <Link href="/process" className="flex items-center gap-2 px-3 py-2 bg-slate-900 text-white rounded-lg">
                     <FaPlus className="w-4 h-4" />
                     Process Video
                   </Link>
-                  <UserMenu />
                 </div>
+              </div>
+              <div className="hidden md:flex items-center">
+                <UserMenu />
               </div>
             </div>
           </div>
