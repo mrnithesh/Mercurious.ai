@@ -2,19 +2,19 @@
 
 import { useState } from 'react';
 import { 
-  Trophy, 
-  RotateCcw, 
-  Eye, 
-  EyeOff, 
-  TrendingUp, 
-  Clock, 
-  CheckCircle, 
-  XCircle,
-  Star,
-  Target,
-  Award,
-  Calendar
-} from 'lucide-react';
+  FaTrophy, 
+  FaRedo, 
+  FaEye, 
+  FaEyeSlash, 
+  FaChartLine, 
+  FaClock, 
+  FaCheckCircle, 
+  FaTimesCircle,
+  FaStar,
+  FaBullseye,
+  FaAward,
+  FaCalendar
+} from 'react-icons/fa';
 import { QuizResultResponse } from '@/lib/api/types/quiz';
 import QuizQuestion from './QuizQuestion';
 
@@ -36,10 +36,10 @@ export default function QuizResults({
   // Safety check to prevent undefined errors
   if (!result || !result.result || !result.questions) {
     return (
-      <div className={`bg-white rounded-2xl shadow-xl border border-red-200 p-8 ${className}`}>
+      <div className={`bg-white rounded-xl shadow-sm border border-red-200 p-8 ${className}`}>
         <div className="text-center">
           <div className="text-red-600 mb-4">
-            <Trophy className="w-12 h-12 mx-auto" />
+            <FaTrophy className="w-12 h-12 mx-auto" />
           </div>
           <h3 className="text-lg font-semibold text-red-900 mb-2">
             Error Loading Results
@@ -49,7 +49,7 @@ export default function QuizResults({
           </p>
           <button
             onClick={onRetakeQuiz}
-            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-sm hover:shadow-md"
           >
             Retake Quiz
           </button>
@@ -70,7 +70,7 @@ export default function QuizResults({
         color: 'text-green-600',
         bgColor: 'bg-green-50',
         borderColor: 'border-green-200',
-        icon: <Trophy className="w-8 h-8 text-yellow-500" />
+        icon: <FaTrophy className="w-8 h-8 text-yellow-500" />
       };
     } else if (scorePercentage >= 75) {
       return {
@@ -79,7 +79,7 @@ export default function QuizResults({
         color: 'text-blue-600',
         bgColor: 'bg-blue-50',
         borderColor: 'border-blue-200',
-        icon: <Award className="w-8 h-8 text-blue-500" />
+        icon: <FaAward className="w-8 h-8 text-blue-500" />
       };
     } else if (scorePercentage >= 60) {
       return {
@@ -88,7 +88,7 @@ export default function QuizResults({
         color: 'text-yellow-600',
         bgColor: 'bg-yellow-50',
         borderColor: 'border-yellow-200',
-        icon: <Target className="w-8 h-8 text-yellow-500" />
+        icon: <FaBullseye className="w-8 h-8 text-yellow-500" />
       };
     } else {
       return {
@@ -97,7 +97,7 @@ export default function QuizResults({
         color: 'text-red-600',
         bgColor: 'bg-red-50',
         borderColor: 'border-red-200',
-        icon: <TrendingUp className="w-8 h-8 text-red-500" />
+        icon: <FaChartLine className="w-8 h-8 text-red-500" />
       };
     }
   };
@@ -123,24 +123,24 @@ export default function QuizResults({
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Main Results Card */}
-      <div className={`bg-white rounded-2xl shadow-xl border ${performance.borderColor} p-8`}>
+      <div className={`bg-white rounded-xl shadow-lg border ${performance.borderColor} p-8`}>
         <div className="text-center mb-8">
           {/* Performance Icon */}
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-fuchsia-500 rounded-full mb-4">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-slate-900 rounded-full mb-4 shadow-md">
             {performance.icon}
           </div>
           
           {/* Score Display */}
-          <h2 className="text-4xl font-bold text-gray-900 mb-2">
+          <h2 className="text-4xl font-bold text-slate-900 mb-2">
             {quizResult.score}/{quizResult.total_questions}
           </h2>
-          <div className="text-6xl font-bold bg-gradient-to-r from-purple-600 to-fuchsia-600 bg-clip-text text-transparent mb-4">
+          <div className="text-6xl font-bold text-slate-900 mb-4">
             {scorePercentage}%
           </div>
           
           {/* Performance Level */}
           <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${performance.bgColor} ${performance.borderColor} border mb-4`}>
-            <Star className={`w-5 h-5 ${performance.color}`} />
+            <FaStar className={`w-5 h-5 ${performance.color}`} />
             <span className={`font-semibold ${performance.color}`}>
               {performance.level}
             </span>
@@ -153,24 +153,24 @@ export default function QuizResults({
 
         {/* Statistics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="text-center p-4 bg-gray-50 rounded-xl">
-            <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
+          <div className="text-center p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <FaCheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
             <div className="text-2xl font-bold text-green-600">
               {quizResult.score}
             </div>
             <div className="text-sm text-gray-600">Correct Answers</div>
           </div>
           
-          <div className="text-center p-4 bg-gray-50 rounded-xl">
-            <XCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+          <div className="text-center p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <FaTimesCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
             <div className="text-2xl font-bold text-red-600">
               {quizResult.total_questions - quizResult.score}
             </div>
             <div className="text-sm text-gray-600">Incorrect Answers</div>
           </div>
           
-          <div className="text-center p-4 bg-gray-50 rounded-xl">
-            <Clock className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+          <div className="text-center p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <FaClock className="w-8 h-8 text-blue-500 mx-auto mb-2" />
             <div className="text-2xl font-bold text-blue-600">
               {formatTime(quizResult.time_taken)}
             </div>
@@ -182,27 +182,27 @@ export default function QuizResults({
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
             onClick={onRetakeQuiz}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white font-medium rounded-xl hover:from-purple-700 hover:to-fuchsia-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+            className="flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
           >
-            <RotateCcw className="w-5 h-5" />
+            <FaRedo className="w-5 h-5" />
             Retake Quiz
           </button>
           
           <button
             onClick={onNewQuiz}
-            className="flex items-center gap-2 px-6 py-3 bg-white text-purple-600 font-medium rounded-xl border-2 border-purple-600 hover:bg-purple-50 transition-all duration-200 transform hover:scale-105"
+            className="flex items-center gap-2 px-6 py-3 bg-white text-slate-900 font-medium rounded-xl border-2 border-slate-900 hover:bg-gray-50 transition-all duration-200 transform hover:scale-105 shadow-sm"
           >
-            <Trophy className="w-5 h-5" />
+            <FaTrophy className="w-5 h-5" />
             Generate New Quiz
           </button>
         </div>
       </div>
 
       {/* Quiz Metadata */}
-      <div className="bg-white rounded-xl shadow-lg border border-purple-100 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-gray-600">
-            <Calendar className="w-5 h-5" />
+            <FaCalendar className="w-5 h-5" />
             <span className="text-sm">
               Completed on {formatDate(quizResult.submitted_at)}
             </span>
@@ -210,16 +210,16 @@ export default function QuizResults({
           
           <button
             onClick={() => setShowDetailedReview(!showDetailedReview)}
-            className="flex items-center gap-2 px-4 py-2 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors font-medium"
           >
             {showDetailedReview ? (
               <>
-                <EyeOff className="w-4 h-4" />
+                <FaEyeSlash className="w-4 h-4" />
                 Hide Review
               </>
             ) : (
               <>
-                <Eye className="w-4 h-4" />
+                <FaEye className="w-4 h-4" />
                 Review Answers
               </>
             )}
@@ -230,8 +230,8 @@ export default function QuizResults({
       {/* Detailed Review */}
       {showDetailedReview && (
         <div className="space-y-6">
-          <div className="bg-white rounded-xl shadow-lg border border-purple-100 p-6">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-xl font-semibold text-slate-900 mb-4">
               Detailed Answer Review
             </h3>
             <p className="text-gray-600 mb-6">
@@ -256,20 +256,20 @@ export default function QuizResults({
                     }
                   `}>
                     {isCorrect ? (
-                      <CheckCircle className="w-5 h-5" />
+                      <FaCheckCircle className="w-5 h-5" />
                     ) : (
-                      <XCircle className="w-5 h-5" />
+                      <FaTimesCircle className="w-5 h-5" />
                     )}
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-lg border border-purple-100 p-4">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
                   <div className="flex items-start gap-3 mb-4">
-                    <div className="flex items-center justify-center w-7 h-7 bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white rounded-lg text-sm font-bold flex-shrink-0">
+                    <div className="flex items-center justify-center w-7 h-7 bg-slate-900 text-white rounded-lg text-sm font-bold flex-shrink-0">
                       {index + 1}
                     </div>
                     <div className="flex-1">
-                      <h2 className="text-base font-semibold text-gray-900 leading-tight">
+                      <h2 className="text-base font-semibold text-slate-900 leading-tight">
                         {question.question}
                       </h2>
                     </div>
@@ -358,11 +358,11 @@ export default function QuizResults({
       )}
 
       {/* Encouragement Message */}
-      <div className="bg-gradient-to-r from-purple-50 to-fuchsia-50 border border-purple-200 rounded-xl p-6 text-center">
-        <h3 className="text-lg font-semibold text-purple-900 mb-2">
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center">
+        <h3 className="text-lg font-semibold text-slate-900 mb-2">
           Keep Learning! 🚀
         </h3>
-        <p className="text-purple-700">
+        <p className="text-gray-700">
           {scorePercentage >= 80 
             ? "Excellent work! You're ready to tackle more challenging content."
             : scorePercentage >= 60

@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Send, 
-  RotateCcw, 
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Target
-} from 'lucide-react';
+  FaChevronLeft,
+  FaChevronRight,
+  FaPaperPlane,
+  FaRedo,
+  FaExclamationTriangle,
+  FaCheckCircle,
+  FaClock,
+  FaBullseye
+} from 'react-icons/fa';
 import { QuizResponse, QuizSubmission, QuizAnswer, QuizState } from '@/lib/api/types/quiz';
 import QuizQuestion from './QuizQuestion';
 import QuizProgressBar from './QuizProgressBar';
@@ -66,11 +66,64 @@ export default function QuizInterface({
     return () => clearInterval(interval);
   }, [mounted, quizState.timeStarted, quizState.isSubmitted]);
 
+  // Keyboard navigation
+  useEffect(() => {
+    if (!mounted || typeof window === 'undefined') return;
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Prevent default if we're handling the key
+      if (['ArrowLeft', 'ArrowRight', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd'].includes(e.key.toLowerCase())) {
+        e.preventDefault();
+      }
+
+      // Arrow keys for navigation
+      if (e.key === 'ArrowLeft' && quizState.currentQuestionIndex > 0) {
+        setQuizState(prev => ({
+          ...prev,
+          currentQuestionIndex: prev.currentQuestionIndex - 1
+        }));
+      } else if (e.key === 'ArrowRight' && quizState.currentQuestionIndex < quiz.questions.length - 1) {
+        setQuizState(prev => ({
+          ...prev,
+          currentQuestionIndex: prev.currentQuestionIndex + 1
+        }));
+      }
+      // Number keys for question jumping (1-9)
+      else if (e.key >= '1' && e.key <= '9') {
+        const questionIndex = parseInt(e.key) - 1;
+        if (questionIndex >= 0 && questionIndex < quiz.questions.length) {
+          setQuizState(prev => ({
+            ...prev,
+            currentQuestionIndex: questionIndex
+          }));
+        }
+      }
+      // Letter keys for answer selection (A-D)
+      else if (e.key >= 'a' && e.key <= 'd' && e.key.length === 1) {
+        const answerIndex = e.key.charCodeAt(0) - 97; // a=0, b=1, c=2, d=3
+        const currentQuestion = quiz.questions[quizState.currentQuestionIndex];
+        if (currentQuestion && currentQuestion.options[answerIndex]) {
+          setQuizState(prev => ({
+            ...prev,
+            answers: prev.answers.map((a, index) => 
+              index === prev.currentQuestionIndex 
+                ? { ...a, selected_answer: currentQuestion.options[answerIndex] }
+                : a
+            )
+          }));
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [mounted, quizState.currentQuestionIndex, quiz.questions]);
+
   if (!mounted) {
     return (
-      <div className={`h-screen flex flex-col overflow-hidden ${className}`}>
+      <div className={`flex flex-col overflow-hidden ${className}`}>
         {/* Loading Header */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-purple-50 to-fuchsia-50 border-b border-purple-200 p-4">
+        <div className="flex-shrink-0 bg-white border-b border-gray-200 p-4">
           <div className="animate-pulse">
             <div className="flex justify-between mb-3">
               <div className="h-6 bg-gray-200 rounded w-32"></div>
@@ -79,13 +132,9 @@ export default function QuizInterface({
             <div className="h-2 bg-gray-200 rounded-full mb-3"></div>
             <div className="flex justify-between">
               <div className="flex gap-1">
-                {Array.from({ length: 5 }, (_, i) => (
+                {Array.from({ length: Math.min(quiz.questions.length, 10) }, (_, i) => (
                   <div key={i} className="w-8 h-8 bg-gray-200 rounded-lg"></div>
                 ))}
-              </div>
-              <div className="flex gap-2">
-                <div className="h-6 bg-gray-200 rounded w-16"></div>
-                <div className="h-6 bg-gray-200 rounded w-16"></div>
               </div>
             </div>
           </div>
@@ -93,7 +142,7 @@ export default function QuizInterface({
         
         {/* Loading Content */}
         <div className="flex-1 px-4 pb-4">
-          <div className="bg-white rounded-xl shadow-lg border border-purple-100 p-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <div className="animate-pulse">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-7 h-7 bg-gray-200 rounded-lg"></div>
@@ -109,7 +158,7 @@ export default function QuizInterface({
         </div>
 
         {/* Loading Footer */}
-        <div className="flex-shrink-0 bg-white border-t border-purple-200 p-4">
+        <div className="flex-shrink-0 bg-white border-t border-gray-200 p-4">
           <div className="animate-pulse">
             <div className="flex justify-between">
               <div className="h-10 bg-gray-200 rounded w-20"></div>
@@ -185,7 +234,7 @@ export default function QuizInterface({
   };
 
   const handleReset = () => {
-    if (window.confirm('Are you sure you want to reset the quiz? All your answers will be lost.')) {
+    if (typeof window !== 'undefined' && window.confirm('Are you sure you want to reset the quiz? All your answers will be lost.')) {
       setQuizState({
         currentQuestionIndex: 0,
         answers: Array(quiz.questions.length).fill(null).map((_, index) => ({
@@ -208,18 +257,18 @@ export default function QuizInterface({
   };
 
   return (
-    <div className={`h-screen flex flex-col overflow-hidden ${className}`}>
+    <div className={`flex flex-col overflow-hidden ${className}`}>
       {/* Fixed Header with Progress and Navigation */}
-      <div className="flex-shrink-0 bg-gradient-to-r from-purple-50 to-fuchsia-50 border-b border-purple-200 p-4">
+      <div className="flex-shrink-0 bg-white border-b border-gray-200 p-4 shadow-sm">
         {/* Compact Progress Bar */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-gradient-to-r from-purple-500 to-fuchsia-500 rounded-lg">
-                <Target className="w-4 h-4 text-white" />
+              <div className="p-1.5 bg-slate-900 rounded-lg">
+                <FaBullseye className="w-4 h-4 text-white" />
               </div>
               <div>
-                <div className="text-lg font-bold bg-gradient-to-r from-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
+                <div className="text-lg font-bold text-slate-900">
                   Question {quizState.currentQuestionIndex + 1} of {quiz.questions.length}
                 </div>
                 <div className="text-xs text-gray-600">
@@ -230,8 +279,8 @@ export default function QuizInterface({
           </div>
           
           {quizState.timeElapsed > 0 && (
-            <div className="flex items-center gap-2 text-sm bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg">
-              <Clock className="w-4 h-4 text-blue-600" />
+            <div className="flex items-center gap-2 text-sm bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg">
+              <FaClock className="w-4 h-4 text-blue-600" />
               <span className="font-semibold text-blue-800">{Math.floor(quizState.timeElapsed / 60)}:{(quizState.timeElapsed % 60).toString().padStart(2, '0')}</span>
             </div>
           )}
@@ -241,7 +290,7 @@ export default function QuizInterface({
         <div className="relative mb-3">
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-gradient-to-r from-purple-500 to-fuchsia-500 h-2 rounded-full transition-all duration-300"
+              className="bg-slate-900 h-2 rounded-full transition-all duration-300"
               style={{ width: `${((quizState.currentQuestionIndex + 1) / quiz.questions.length) * 100}%` }}
             />
           </div>
@@ -259,45 +308,44 @@ export default function QuizInterface({
                   key={index}
                   onClick={() => handleQuestionJump(index)}
                   className={`
-                    w-8 h-8 rounded-lg font-medium text-xs transition-all duration-200 transform hover:scale-105
+                    relative w-8 h-8 rounded-lg font-medium text-xs transition-all duration-200 transform hover:scale-105
                     ${isCurrentQuestion 
-                      ? 'bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white ring-2 ring-purple-200' 
+                      ? 'bg-slate-900 text-white ring-2 ring-blue-200 shadow-md' 
                       : isAnswered 
-                        ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-300' 
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'
                     }
                   `}
+                  title={`Question ${index + 1}${isAnswered ? ' (answered)' : ''}`}
                 >
                   {index + 1}
                   {isAnswered && !isCurrentQuestion && (
-                    <CheckCircle className="w-3 h-3 absolute -top-1 -right-1 text-green-600 bg-white rounded-full" />
+                    <FaCheckCircle className="w-3 h-3 absolute -top-1 -right-1 text-emerald-600 bg-white rounded-full" />
                   )}
                 </button>
               );
             })}
           </div>
-
-
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 px-4">
+      <div className="flex-1 overflow-y-auto px-4 py-4">
         {/* Compact Question */}
-        <div className="bg-white rounded-xl shadow-lg border border-purple-100 p-4">
-          <div className="flex items-start gap-3 mb-4">
-            <div className="flex items-center justify-center w-7 h-7 bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white rounded-lg text-sm font-bold flex-shrink-0">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 max-w-3xl mx-auto">
+          <div className="flex items-start gap-3 mb-6">
+            <div className="flex items-center justify-center w-8 h-8 bg-slate-900 text-white rounded-lg text-sm font-bold flex-shrink-0">
               {quizState.currentQuestionIndex + 1}
             </div>
             <div className="flex-1">
-              <h2 className="text-base font-semibold text-gray-900 leading-tight">
+              <h2 className="text-lg font-semibold text-slate-900 leading-tight">
                 {currentQuestion.question}
               </h2>
             </div>
           </div>
 
           {/* Compact Answer Options */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             {currentQuestion.options.map((option, index) => {
               const optionLetter = String.fromCharCode(65 + index);
               const isSelected = quizState.answers[quizState.currentQuestionIndex]?.selected_answer === option;
@@ -307,24 +355,26 @@ export default function QuizInterface({
                   key={index}
                   onClick={() => handleAnswerSelect(option)}
                   className={`
-                    w-full p-3 rounded-lg border-2 transition-all duration-200 text-left flex items-center gap-3 min-h-[48px] shadow-sm
+                    w-full p-4 rounded-lg border-2 transition-all duration-200 text-left flex items-center gap-3 min-h-[56px] shadow-sm
                     ${isSelected 
-                      ? 'bg-purple-50 border-purple-500 text-purple-900 shadow-purple-100' 
-                      : 'bg-white border-gray-200 hover:border-purple-300 hover:bg-purple-50 hover:shadow-md'
+                      ? 'bg-blue-50 border-blue-500 text-slate-900 shadow-md ring-2 ring-blue-200' 
+                      : 'bg-white border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:shadow-md'
                     }
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
                   `}
+                  aria-label={`Select option ${optionLetter}: ${option}`}
                 >
                   <div className={`
-                    flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold flex-shrink-0
+                    flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold flex-shrink-0 transition-colors
                     ${isSelected 
-                      ? 'bg-purple-500 text-white' 
+                      ? 'bg-blue-600 text-white' 
                       : 'bg-gray-100 text-gray-600'
                     }
                   `}>
                     {optionLetter}
                   </div>
-                  <span className="text-sm font-medium flex-1 text-gray-900 leading-relaxed">{option}</span>
-                  {isSelected && <CheckCircle className="w-4 h-4 text-purple-500 flex-shrink-0" />}
+                  <span className="text-sm font-medium flex-1 text-slate-900 leading-relaxed">{option}</span>
+                  {isSelected && <FaCheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />}
                 </button>
               );
             })}
@@ -333,22 +383,26 @@ export default function QuizInterface({
       </div>
 
       {/* Fixed Bottom Navigation */}
-      <div className="flex-shrink-0 bg-white border-t border-purple-200 p-4">
-        <div className="flex items-center justify-between">
+      <div className="flex-shrink-0 bg-white border-t border-gray-200 p-4 shadow-sm">
+        <div className="flex items-center justify-between max-w-3xl mx-auto">
           {/* Previous Button */}
           <button
             onClick={handlePreviousQuestion}
             disabled={quizState.currentQuestionIndex === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            aria-label="Previous question"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <FaChevronLeft className="w-4 h-4" />
             Previous
           </button>
 
           {/* Center Status */}
           <div className="text-center">
             {allQuestionsAnswered && (
-              <div className="text-xs text-green-600 font-medium mb-1">✅ All answered!</div>
+              <div className="text-xs text-emerald-600 font-medium mb-1 flex items-center justify-center gap-1">
+                <FaCheckCircle className="w-3 h-3" />
+                All answered!
+              </div>
             )}
             <div className="text-sm text-gray-600">
               Question {quizState.currentQuestionIndex + 1} of {quiz.questions.length}
@@ -361,13 +415,14 @@ export default function QuizInterface({
               onClick={handleSubmitQuiz}
               disabled={isSubmitting}
               className={`
-                flex items-center gap-2 px-6 py-2 font-medium rounded-lg transition-all duration-200
+                flex items-center gap-2 px-6 py-2 font-medium rounded-lg transition-all duration-200 shadow-sm
                 ${allQuestionsAnswered 
-                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600 shadow-lg' 
-                  : 'bg-yellow-100 text-yellow-800 border border-yellow-300 hover:bg-yellow-200'
+                  ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg' 
+                  : 'bg-yellow-100 text-yellow-800 border-2 border-yellow-300 hover:bg-yellow-200'
                 }
                 disabled:opacity-50 disabled:cursor-not-allowed
               `}
+              aria-label={allQuestionsAnswered ? 'Submit quiz' : 'Answer all questions to submit'}
             >
               {isSubmitting ? (
                 <>
@@ -376,12 +431,12 @@ export default function QuizInterface({
                 </>
               ) : allQuestionsAnswered ? (
                 <>
-                  <Send className="w-4 h-4" />
+                  <FaPaperPlane className="w-4 h-4" />
                   Submit Quiz
                 </>
               ) : (
                 <>
-                  <AlertTriangle className="w-4 h-4" />
+                  <FaExclamationTriangle className="w-4 h-4" />
                   Answer All
                 </>
               )}
@@ -389,10 +444,11 @@ export default function QuizInterface({
           ) : (
             <button
               onClick={handleNextQuestion}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors shadow-sm hover:shadow-md font-medium"
+              aria-label="Next question"
             >
               Next
-              <ChevronRight className="w-4 h-4" />
+              <FaChevronRight className="w-4 h-4" />
             </button>
           )}
         </div>

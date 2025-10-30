@@ -796,45 +796,48 @@ ${video.content.analysis}
                         </div>
                       )}
 
-                      {/* Quiz Navigation */}
-                      {(quizView === 'history' || quizView === 'statistics') && (
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-                          <div className="flex items-center justify-between">
-                            <button
-                              onClick={handleBackToQuiz}
-                              className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
-                            >
-                              <FaArrowLeft className="w-4 h-4" />
-                              Back to Quiz
-                            </button>
-                            
-                            <div className="flex gap-2">
-                              <button
-                                onClick={handleViewHistory}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                                  quizView === 'history'
-                                    ? 'bg-slate-900 text-white'
-                                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-                                }`}
-                              >
-                                <FaHistory className="w-4 h-4" />
-                                History
-                              </button>
-                              <button
-                                onClick={handleViewStatistics}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                                  quizView === 'statistics'
-                                    ? 'bg-slate-900 text-white'
-                                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-                                }`}
-                              >
-                                <FaTrophy className="w-4 h-4" />
-                                Statistics
-                              </button>
-                            </div>
-                          </div>
+                      {/* Persistent Quiz Navigation Bar */}
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-1">
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => {
+                              if (quizView === 'history' || quizView === 'statistics') {
+                                setQuizView('generator');
+                              }
+                            }}
+                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
+                              quizView === 'generator' || quizView === 'interface' || quizView === 'results'
+                                ? 'bg-slate-900 text-white shadow-sm'
+                                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                            }`}
+                          >
+                            <FaBullseye className="w-4 h-4" />
+                            Quiz
+                          </button>
+                          <button
+                            onClick={handleViewHistory}
+                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
+                              quizView === 'history'
+                                ? 'bg-slate-900 text-white shadow-sm'
+                                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                            }`}
+                          >
+                            <FaHistory className="w-4 h-4" />
+                            History
+                          </button>
+                          <button
+                            onClick={handleViewStatistics}
+                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
+                              quizView === 'statistics'
+                                ? 'bg-slate-900 text-white shadow-sm'
+                                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                            }`}
+                          >
+                            <FaTrophy className="w-4 h-4" />
+                            Statistics
+                          </button>
                         </div>
-                      )}
+                      </div>
 
                       {/* Quiz Content */}
                       {quizView === 'generator' && (
@@ -843,6 +846,7 @@ ${video.content.analysis}
                           videoTitle={video.info.title}
                           onQuizGenerated={handleQuizGenerated}
                           onError={handleQuizError}
+                          onLoadingStart={() => setIsGeneratingQuiz(true)}
                           isLoading={isGeneratingQuiz}
                           availability={quizAvailability}
                         />
@@ -882,31 +886,6 @@ ${video.content.analysis}
 
                       {quizView === 'statistics' && (
                         <QuizStatistics />
-                      )}
-
-                      {/* Quick Actions */}
-                      {(quizView === 'generator' || quizView === 'results') && (
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                          <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                            Quick Actions
-                          </h4>
-                          <div className="flex flex-wrap gap-3">
-                            <button
-                              onClick={handleViewHistory}
-                              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200"
-                            >
-                              <FaHistory className="w-4 h-4" />
-                              View History
-                            </button>
-                            <button
-                              onClick={handleViewStatistics}
-                              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200"
-                            >
-                              <FaTrophy className="w-4 h-4" />
-                              View Statistics
-                            </button>
-                          </div>
-                        </div>
                       )}
                     </div>
                   )}
