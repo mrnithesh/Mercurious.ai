@@ -42,6 +42,7 @@ import { apiClient, VideoResponse, QuizResponse, QuizResultResponse, QuizAvailab
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import ChatAssistant from '@/components/ChatAssistant';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import { UserMenu } from '@/components/Auth';
 import { QuizGenerator, QuizInterface, QuizResults, QuizHistory, QuizStatistics } from '@/components/Quiz';
 
@@ -247,6 +248,7 @@ export default function VideoDetail() {
   const params = useParams();
   const videoId = params.id as string;
   const { user, initialized } = useAuth();
+  const { showError, showSuccess } = useToast();
   
   const [video, setVideo] = useState<VideoResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -292,7 +294,7 @@ export default function VideoDetail() {
       await apiClient.toggleVideoFavorite(videoId, !video.is_favorite);
       setVideo(prev => prev ? { ...prev, is_favorite: !prev.is_favorite } : null);
     } catch (err) {
-      alert('Failed to update favorite: ' + (err instanceof Error ? err.message : 'Unknown error'));
+      showError('Failed to update favorite: ' + (err instanceof Error ? err.message : 'Unknown error'));
     } finally {
       setIsUpdatingFavorite(false);
     }
@@ -305,7 +307,7 @@ export default function VideoDetail() {
       await apiClient.updateVideoProgress(videoId, progress);
       setVideo(prev => prev ? { ...prev, progress, last_watched: new Date().toISOString() } : null);
     } catch (err) {
-      alert('Failed to update progress: ' + (err instanceof Error ? err.message : 'Unknown error'));
+      showError('Failed to update progress: ' + (err instanceof Error ? err.message : 'Unknown error'));
     }
   };
 
@@ -315,8 +317,9 @@ export default function VideoDetail() {
     try {
       await apiClient.updateVideoNotes(videoId, notes);
       setVideo(prev => prev ? { ...prev, notes } : null);
+      showSuccess('Notes saved successfully');
     } catch (err) {
-      alert('Failed to save notes: ' + (err instanceof Error ? err.message : 'Unknown error'));
+      showError('Failed to save notes: ' + (err instanceof Error ? err.message : 'Unknown error'));
       throw err;
     }
   };
@@ -349,17 +352,18 @@ export default function VideoDetail() {
   };
 
   const handleQuizSubmitted = (result: QuizResultResponse) => {
-    console.log('Quiz submitted successfully:', result);
     setQuizResult(result);
     setQuizView('results');
     setIsSubmittingQuiz(false);
     setQuizError(null);
+    showSuccess('Quiz submitted successfully!');
   };
 
   const handleQuizError = (error: string) => {
     setQuizError(error);
     setIsGeneratingQuiz(false);
     setIsSubmittingQuiz(false);
+    showError(error);
   };
 
   const handleRetakeQuiz = () => {
@@ -590,6 +594,7 @@ ${video.content.analysis}
                             ? 'bg-yellow-100 text-yellow-800 border-2 border-yellow-300'
                             : 'bg-gray-100 text-gray-700 border-2 border-gray-300 hover:bg-gray-200'
                         }`}
+                        aria-label={video.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
                       >
                         <FaStar className={`w-4 h-4 ${video.is_favorite ? 'fill-current' : ''}`} />
                         {video.is_favorite ? 'Favorited' : 'Add to Favorites'}
@@ -598,6 +603,7 @@ ${video.content.analysis}
                       <button
                         onClick={() => setIsNotesModalOpen(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 border-2 border-blue-300 rounded-lg hover:bg-blue-200 transition-colors font-medium"
+                        aria-label={video.notes ? 'Edit notes' : 'Add notes'}
                       >
                         <FaEdit className="w-4 h-4" />
                         {video.notes ? 'Edit Notes' : 'Add Notes'}
@@ -606,6 +612,7 @@ ${video.content.analysis}
                       <button
                         onClick={downloadContent}
                         className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 border-2 border-green-300 rounded-lg hover:bg-green-200 transition-colors font-medium"
+                        aria-label="Download video content as markdown"
                       >
                         <FaDownload className="w-4 h-4" />
                         Download Content
@@ -654,6 +661,8 @@ ${video.content.analysis}
                             ? 'border-blue-500 text-blue-600 bg-white'
                             : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                         }`}
+                        aria-label={`View ${tab.label}`}
+                        aria-current={activeTab === tab.id ? 'page' : undefined}
                       >
                         <div className={`p-1.5 ${tab.color} rounded-lg`}>
                           <tab.icon className="w-3.5 h-3.5 text-white" />

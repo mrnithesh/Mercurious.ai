@@ -12,6 +12,7 @@ import {
   FaWindowMaximize
 } from 'react-icons/fa';
 import { apiClient, ChatMessage, ChatHistory } from '@/lib/api';
+import { useToast } from '@/contexts/ToastContext';
 
 interface ChatAssistantProps {
   videoId: string;
@@ -19,6 +20,7 @@ interface ChatAssistantProps {
 }
 
 export default function ChatAssistant({ videoId, videoContext }: ChatAssistantProps) {
+  const { showError } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -102,6 +104,7 @@ export default function ChatAssistant({ videoId, videoContext }: ChatAssistantPr
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to send message';
       setError(errorMessage);
+      showError(errorMessage);
       
       // Remove the user message if sending failed
       setMessages(prev => prev.slice(0, -1));
@@ -116,7 +119,7 @@ export default function ChatAssistant({ videoId, videoContext }: ChatAssistantPr
       setMessages([]);
       setError(null);
     } catch (err) {
-      console.error('Failed to clear chat:', err);
+      showError('Failed to clear chat history');
     }
   };
 
@@ -140,6 +143,7 @@ export default function ChatAssistant({ videoId, videoContext }: ChatAssistantPr
         <button
           onClick={() => setIsMinimized(false)}
           className="bg-slate-900 text-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+          aria-label="Open chat assistant"
         >
           <FaComments className="w-6 h-6" />
         </button>
@@ -161,6 +165,7 @@ export default function ChatAssistant({ videoId, videoContext }: ChatAssistantPr
               onClick={clearChat}
               className="p-1 hover:bg-white/20 rounded transition-colors"
               title="Clear chat"
+              aria-label="Clear chat history"
             >
               <FaTrash className="w-4 h-4" />
             </button>
@@ -168,6 +173,7 @@ export default function ChatAssistant({ videoId, videoContext }: ChatAssistantPr
               onClick={() => setIsMinimized(true)}
               className="p-1 hover:bg-white/20 rounded transition-colors"
               title="Minimize"
+              aria-label="Minimize chat window"
             >
               <FaWindowMinimize className="w-4 h-4" />
             </button>
@@ -178,10 +184,13 @@ export default function ChatAssistant({ videoId, videoContext }: ChatAssistantPr
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {messages.length === 0 ? (
             <div className="text-center text-gray-500 py-8">
-              <FaRobot className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p className="text-sm">
+              <div className="p-3 bg-slate-100 rounded-full w-fit mx-auto mb-4">
+                <FaRobot className="w-10 h-10 text-slate-600" />
+              </div>
+              <h4 className="font-semibold text-slate-900 mb-2">AI Learning Assistant</h4>
+              <p className="text-sm text-gray-600 max-w-xs mx-auto leading-relaxed">
                 Hi! I'm here to help you understand the video content. 
-                Ask me anything about what you've watched!
+                Ask me anything about what you've watched, and I'll provide detailed explanations!
               </p>
             </div>
           ) : (

@@ -17,11 +17,13 @@ import {
 import { apiClient } from '@/lib/api';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { UserMenu } from '@/components/Auth';
+import { useToast } from '@/contexts/ToastContext';
 
 type ProcessingStep = 'fetch' | 'transcript' | 'ai';
 
 export default function ProcessVideo() {
   const router = useRouter();
+  const { showError, showSuccess } = useToast();
   const [videoUrl, setVideoUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<ProcessingStep | null>(null);
@@ -33,7 +35,9 @@ export default function ProcessVideo() {
 
     // Validate YouTube URL
     if (!apiClient.isValidYouTubeUrl(videoUrl)) {
-      setError('Please enter a valid YouTube URL');
+      const errorMsg = 'Please enter a valid YouTube URL';
+      setError(errorMsg);
+      showError(errorMsg);
       return;
     }
 
@@ -54,11 +58,13 @@ export default function ProcessVideo() {
       const data = await apiClient.processVideo(videoUrl);
       
       // Redirect to video page
+      showSuccess('Video processed successfully!');
       router.push(`/video/${data.video_id}`);
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to process video. Please try again.';
       setError(errorMessage);
+      showError(errorMessage);
       setCurrentStep(null);
     } finally {
       setIsLoading(false);

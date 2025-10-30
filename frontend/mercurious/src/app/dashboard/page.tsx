@@ -243,6 +243,7 @@ const VideoCard = memo(function VideoCard({ video, onRemove, onToggleFavorite, s
           onClick={handleToggleFavorite}
           disabled={isTogglingFavorite}
           className="absolute top-3 left-3 p-2 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full transition-all duration-200"
+          aria-label={video.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
         >
           <FaStar 
             className={`w-4 h-4 transition-colors ${
@@ -259,6 +260,8 @@ const VideoCard = memo(function VideoCard({ video, onRemove, onToggleFavorite, s
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full transition-all duration-200"
+              aria-label="Video options menu"
+              aria-expanded={isMenuOpen}
             >
               <FaEllipsisV className="w-4 h-4 text-white" />
             </button>
@@ -816,14 +819,14 @@ export default function UnifiedDashboard() {
                 ) : videos.length === 0 ? null : (
                   /* Empty State - No filtered results */
                   <div className="bg-white rounded-xl p-12 text-center shadow-sm border border-gray-200">
-                    <div className="p-4 bg-gray-100 rounded-full w-fit mx-auto mb-6">
-                      <FaSearch className="w-12 h-12 text-gray-600" />
+                    <div className="p-4 bg-blue-100 rounded-full w-fit mx-auto mb-6">
+                      <FaSearch className="w-12 h-12 text-blue-600" />
                     </div>
-                    <h3 className="text-xl font-semibold text-slate-900 mb-2">
-                      No videos found
+                    <h3 className="text-2xl font-semibold text-slate-900 mb-3">
+                      No videos match your search
                     </h3>
-                    <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                      Try adjusting your search terms or filters to find what you're looking for.
+                    <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
+                      We couldn't find any videos matching your current filters. Try adjusting your search terms or clearing the filters to see all your videos.
                     </p>
                     <button 
                       onClick={() => {
@@ -831,6 +834,7 @@ export default function UnifiedDashboard() {
                         setShowFavoritesOnly(false);
                       }}
                       className="px-6 py-3 bg-slate-900 text-white font-medium rounded-lg hover:bg-slate-800 transition-colors shadow-sm hover:shadow-md"
+                      aria-label="Clear all filters"
                     >
                       Clear Filters
                     </button>
@@ -841,19 +845,19 @@ export default function UnifiedDashboard() {
           ) : (
             /* Empty State - No videos */
             <div className="bg-white rounded-xl p-12 text-center shadow-sm border border-gray-200">
-              <div className="p-4 bg-gray-100 rounded-full w-fit mx-auto mb-6">
-                <FaYoutube className="w-12 h-12 text-gray-600" />
+              <div className="p-4 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full w-fit mx-auto mb-6">
+                <FaYoutube className="w-12 h-12 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">
+              <h3 className="text-2xl font-semibold text-slate-900 mb-3">
                 Welcome to Mercurious AI!
               </h3>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                Start your learning journey by processing your first YouTube video. 
-                Our AI will analyze the content and help you learn more effectively.
+              <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg leading-relaxed">
+                Transform any YouTube video into an interactive learning experience. Our AI will analyze the content, generate summaries, create study guides, and even craft personalized quizzes to help you learn more effectively.
               </p>
               <Link 
                 href="/process"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+                aria-label="Go to process video page"
               >
                 <FaPlus className="w-5 h-5" />
                 Process Your First Video
