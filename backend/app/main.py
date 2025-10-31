@@ -14,9 +14,16 @@ app = FastAPI(
 )
 
 # Configure CORS for frontend
-# Allow frontend URL from environment variable, fallback to "*" for development
-frontend_url = os.getenv("FRONTEND_URL", "*")
-allow_origins = [frontend_url] if frontend_url != "*" else ["*"]
+# Allow frontend URLs from environment variable, fallback to "*" for development
+# Supports multiple URLs separated by commas
+frontend_urls = os.getenv("FRONTEND_URL", "*")
+
+if frontend_urls == "*":
+    allow_origins = ["*"]
+else:
+    # Split by comma to support multiple URLs
+    # Also strip whitespace from each URL
+    allow_origins = [url.strip() for url in frontend_urls.split(",")]
 
 app.add_middleware(
     CORSMiddleware,
