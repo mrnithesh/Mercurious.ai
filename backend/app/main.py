@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routers import videos_router, chat_router, quiz_router
@@ -13,11 +14,20 @@ app = FastAPI(
 )
 
 # Configure CORS for frontend
+# Allow frontend URLs from environment variable, fallback to "*" for development
+# Supports multiple URLs separated by commas
+frontend_urls = os.getenv("FRONTEND_URL", "*")
+
+if frontend_urls == "*":
+    allow_origins = ["*"]
+else:
+    # Split by comma to support multiple URLs
+    # Also strip whitespace from each URL
+    allow_origins = [url.strip() for url in frontend_urls.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "*"
-    ],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

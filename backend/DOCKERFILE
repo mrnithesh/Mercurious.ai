@@ -12,6 +12,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application's code into the container
 COPY . .
 
+# Expose port 8080 for Cloud Run
+EXPOSE 8080
+
 # Command to run the application using uvicorn
 # We use 0.0.0.0 to allow traffic from outside the container.
 # The port is set to 8080, a common practice for cloud-run containers.
