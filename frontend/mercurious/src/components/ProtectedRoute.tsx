@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoginModal, RegisterModal } from '@/components/Auth';
-import { FaBrain } from 'react-icons/fa';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -46,8 +46,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="p-3 bg-slate-900 rounded-xl w-fit mx-auto mb-4 animate-pulse">
-            <FaBrain className="w-8 h-8 text-white" />
+          <div className="w-fit mx-auto mb-4 animate-pulse">
+            <Image src="/logo.png" alt="Mercurious AI Logo" width={48} height={48} className="w-12 h-12" />
           </div>
           <div className="w-8 h-8 border-4 border-gray-200 border-t-slate-900 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">
@@ -67,8 +67,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center">
-        <div className="p-3 bg-slate-900 rounded-xl w-fit mx-auto mb-6">
-          <FaBrain className="w-12 h-12 text-white" />
+        <div className="w-fit mx-auto mb-6">
+          <Image src="/logo.png" alt="Mercurious AI Logo" width={64} height={64} className="w-16 h-16" />
         </div>
         <h1 className="text-2xl font-bold text-slate-900 mb-4">
           Authentication Required
