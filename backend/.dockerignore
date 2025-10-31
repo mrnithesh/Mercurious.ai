@@ -1,13 +1,40 @@
-# Ignore the virtual environment
-venv/
-
-# Ignore Python cache files
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
 
-# Ignore the secrets file
-firebase-credentials.json
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment files
 .env
+.env.local
+.env.*.local
 
-# Ignore the Dockerfile itself
-Dockerfile
+# Firebase credentials (should use env vars in production)
+firebase-credentials.json
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+README.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
