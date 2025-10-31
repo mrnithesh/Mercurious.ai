@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ReactElement } from 'react';
 import { 
   FaHistory, 
   FaClock, 
@@ -99,7 +99,7 @@ export default function QuizHistory({
     return 'bg-red-50 border-red-200';
   };
 
-  const getTrendIcon = (currentIndex: number): JSX.Element | null => {
+  const getTrendIcon = (currentIndex: number): ReactElement | null => {
     if (currentIndex >= history.length - 1) return null;
     
     const current = getScorePercentage(history[currentIndex]);

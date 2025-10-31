@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ReactElement } from 'react';
 import { 
   FaChartLine, 
   FaTrophy, 
@@ -46,7 +46,7 @@ export default function QuizStatistics({ className = '' }: QuizStatisticsProps) 
     level: string;
     color: string;
     bgColor: string;
-    icon: JSX.Element;
+    icon: ReactElement;
   } => {
     if (score >= 90) {
       return {

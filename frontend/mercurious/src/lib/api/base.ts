@@ -40,7 +40,7 @@ export class BaseAPIClient {
     retryCount = 0
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    const defaultHeaders = {
+    const defaultHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
