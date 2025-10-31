@@ -12,7 +12,9 @@ import {
   FaExclamationTriangle,
   FaHome,
   FaPlus,
-  FaSpinner
+  FaSpinner,
+  FaInfoCircle,
+  FaArrowRight
 } from 'react-icons/fa';
 import { apiClient } from '@/lib/api';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -20,6 +22,28 @@ import { UserMenu } from '@/components/Auth';
 import { useToast } from '@/contexts/ToastContext';
 
 type ProcessingStep = 'fetch' | 'transcript' | 'ai';
+
+// Example videos that are already processed and available for demonstration
+const EXAMPLE_VIDEOS = [
+  {
+    video_id: 'JxgmHe2NyeY',
+    title: 'Complete Machine Learning In 6 Hours| Krish Naik',
+    description: 'This video is a complete machine learning course in 6 hours. It covers all the basics of machine learning.',
+    thumbnail_url: 'https://i.ytimg.com/vi/JxgmHe2NyeY/hqdefault.jpg'
+  },
+  {
+    video_id: 'If1Lw4pLLEo',
+    title: 'Spring Framework Tutorial | Full Course',
+    description: 'This video is a complete spring framework course. It covers all the basics of spring framework.',
+    thumbnail_url: 'https://i.ytimg.com/vi/If1Lw4pLLEo/hqdefault.jpg'
+  },
+  {
+    video_id: 'iInUBOVeBCc',
+    title: 'NGINX Explained - What is Nginx',
+    description: 'Complete Nginx course. It covers all the basics of Nginx.',
+    thumbnail_url: 'https://i.ytimg.com/vi/iInUBOVeBCc/hqdefault.jpg'
+  }
+];
 
 export default function ProcessVideo() {
   const router = useRouter();
@@ -125,6 +149,24 @@ export default function ProcessVideo() {
             </p>
           </header>
 
+          {/* Disclaimer Banner */}
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8 shadow-sm">
+            <div className="flex items-start gap-4">
+              <div className="p-2 bg-amber-100 rounded-lg flex-shrink-0">
+                <FaInfoCircle className="w-6 h-6 text-amber-700" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-amber-900 mb-2">
+                  Cloud Hosting Limitation
+                </h3>
+                <p className="text-amber-800">
+                  Note: New video processing is currently unavailable on cloud hosting due to network restrictions from YouTube. 
+                  However, you can explore our pre-processed example videos below to experience the full functionality of Mercurious AI or use the local hosting.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Processing Form */}
           <div className="bg-white rounded-xl shadow-lg p-8 mb-8 border border-gray-200">
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -217,6 +259,59 @@ export default function ProcessVideo() {
               </div>
             </div>
           )}
+
+          {/* Example Videos Section */}
+          <div className="bg-white rounded-xl shadow-lg p-8 mb-8 border border-gray-200">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                Try Pre-processed Example Videos
+              </h2>
+              <p className="text-gray-600">
+                Explore these already processed videos to see Mercurious AI in action
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {EXAMPLE_VIDEOS.map((video) => (
+                <Link
+                  key={video.video_id}
+                  href={`/video/${video.video_id}`}
+                  className="group bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 hover:scale-105"
+                >
+                  <div className="relative aspect-video bg-gray-200 overflow-hidden">
+                    <img
+                      src={video.thumbnail_url}
+                      alt={video.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'https://via.placeholder.com/640x360?text=Video+Thumbnail';
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div className="p-3 bg-white/90 rounded-full">
+                          <FaPlay className="w-5 h-5 text-slate-900" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-semibold text-slate-900 mb-2 line-clamp-2 group-hover:text-slate-700 transition-colors">
+                      {video.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                      {video.description}
+                    </p>
+                    <div className="flex items-center gap-2 text-slate-900 font-medium text-sm group-hover:gap-3 transition-all">
+                      <span>View Processed Video</span>
+                      <FaArrowRight className="w-4 h-4" />
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
 
           {/* Help Section */}
           <div className="bg-gray-50 rounded-xl p-8 border border-gray-200">
