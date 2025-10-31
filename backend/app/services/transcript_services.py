@@ -6,12 +6,14 @@ import google.genai as genai
 from dotenv import load_dotenv
 import os
 from fastapi import HTTPException
+import requests
+import random
 load_dotenv()
 
 class ProxyManager:
-    """Manages proxy servers with ScraperAPI priority and free proxy fallbacks"""
+    """Manages free proxy servers for YouTube transcript API"""
     
-    # List of free public proxies as fallback (these change frequently)
+    # List of free public proxies (these change frequently, but provide fallback)
     FALLBACK_PROXIES = [
         "http://20.111.54.16:8123",
         "http://8.219.97.248:80",
@@ -21,41 +23,56 @@ class ProxyManager:
     ]
     
     def __init__(self):
-        self.scraperapi_key = os.getenv("SCRAPERAPI_KEY")
-        self.fallback_index = 0
+        self.proxy_list = []
+        self.current_index = 0
         
-    def get_scraperapi_config(self) -> Optional[GenericProxyConfig]:
-        """Get ScraperAPI proxy configuration (priority method)"""
-        if not self.scraperapi_key:
-            return None
+    def fetch_free_proxies(self) -> List[str]:
+        """Fetch free proxies from online sources"""
+        proxies = []
         
-        # ScraperAPI proxy format
-        proxy_url = f"http://scraperapi:{self.scraperapi_key}@proxy-server.scraperapi.com:8001"
+        try:
+            # Try fetching from free proxy API
+            response = requests.get(
+                "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=10000&country=all&ssl=all&anonymity=all",
+                timeout=5
+            )
+            if response.status_code == 200:
+                proxy_lines = response.text.strip().split('\n')
+                for proxy in proxy_lines[:10]:  # Take first 10
+                    if proxy.strip():
+                        proxies.append(f"http://{proxy.strip()}")
+        except Exception as e:
+            print(f"Failed to fetch proxies from proxyscrape: {str(e)}")
+        
+        # Add fallback proxies
+        proxies.extend(self.FALLBACK_PROXIES)
+        
+        # Shuffle for load distribution
+        random.shuffle(proxies)
+        return proxies
+    
+    def get_proxy_config(self, proxy_url: str) -> GenericProxyConfig:
+        """Create proxy configuration for YouTubeTranscriptApi"""
         return GenericProxyConfig(
             http_url=proxy_url,
             https_url=proxy_url
         )
     
-    def get_fallback_proxy_config(self) -> Optional[GenericProxyConfig]:
-        """Get next free proxy configuration (fallback method)"""
-        if not self.FALLBACK_PROXIES:
+    def get_next_proxy(self) -> Optional[str]:
+        """Get next proxy from the list"""
+        if not self.proxy_list:
+            self.proxy_list = self.fetch_free_proxies()
+            self.current_index = 0
+        
+        if not self.proxy_list:
             return None
         
-        # Rotate through fallback proxies
-        if self.fallback_index >= len(self.FALLBACK_PROXIES):
-            self.fallback_index = 0
-        
-        proxy_url = self.FALLBACK_PROXIES[self.fallback_index]
-        self.fallback_index += 1
-        
-        return GenericProxyConfig(
-            http_url=proxy_url,
-            https_url=proxy_url
-        )
-    
-    def has_scraperapi(self) -> bool:
-        """Check if ScraperAPI key is available"""
-        return bool(self.scraperapi_key)
+        if self.current_index >= len(self.proxy_list):
+            self.current_index = 0
+            
+        proxy = self.proxy_list[self.current_index]
+        self.current_index += 1
+        return proxy
 
 class TranscriptService:
     def __init__(self):
@@ -71,24 +88,31 @@ class TranscriptService:
         self.proxy_manager = ProxyManager()
 
     async def fetch_transcript(self, video_id: str) -> str:
-        """Fetch transcript from YouTube using ScraperAPI, then free proxies, then direct connection"""
+        """Fetch transcript from YouTube using proxies with retry logic"""
+        max_attempts = 5
         last_error = None
         
-        print(f"📥 Fetching transcript for video: {video_id}")
-        
-        # Method 1: Try ScraperAPI (most reliable for cloud deployments)
-        if self.proxy_manager.has_scraperapi():
+        # Try with multiple proxies
+        for attempt in range(max_attempts):
             try:
-                print("🔄 Method 1: Trying ScraperAPI (residential proxies)...")
-                scraperapi_config = self.proxy_manager.get_scraperapi_config()
-                ytt_api = YouTubeTranscriptApi(proxy_config=scraperapi_config)
+                proxy_url = self.proxy_manager.get_next_proxy()
                 
+                if proxy_url:
+                    print(f"Attempt {attempt + 1}/{max_attempts}: Trying proxy {proxy_url}")
+                    proxy_config = self.proxy_manager.get_proxy_config(proxy_url)
+                    ytt_api = YouTubeTranscriptApi(proxy_config=proxy_config)
+                else:
+                    print(f"Attempt {attempt + 1}/{max_attempts}: Trying without proxy")
+                    ytt_api = YouTubeTranscriptApi()
+                
+                # Fetch transcript in executor to avoid blocking
                 loop = asyncio.get_event_loop()
                 transcript = await loop.run_in_executor(
                     None,
                     lambda: ytt_api.get_transcript(video_id)
                 )
                 
+                # Process transcript
                 result = ' '.join(entry['text'] for entry in transcript)
                 if not result.strip():
                     raise HTTPException(
@@ -96,86 +120,30 @@ class TranscriptService:
                         detail="Transcript is empty or not available"
                     )
                 
-                print("✅ SUCCESS: Transcript fetched using ScraperAPI")
+                print(f"✓ Successfully fetched transcript using {'proxy ' + proxy_url if proxy_url else 'direct connection'}")
                 return result
                 
             except HTTPException:
                 raise
             except Exception as e:
                 last_error = str(e)
-                print(f"❌ ScraperAPI failed: {last_error}")
-                print("⚠️ Falling back to free proxies...")
-        else:
-            print("⚠️ SCRAPERAPI_KEY not found - skipping ScraperAPI")
-            print("💡 Tip: Add SCRAPERAPI_KEY to .env for reliable cloud deployment")
-        
-        # Method 2: Try free proxy fallbacks
-        print("🔄 Method 2: Trying free proxy servers...")
-        for attempt in range(3):
-            try:
-                fallback_config = self.proxy_manager.get_fallback_proxy_config()
-                if fallback_config:
-                    print(f"  Attempt {attempt + 1}/3: Trying free proxy...")
-                    ytt_api = YouTubeTranscriptApi(proxy_config=fallback_config)
-                    
-                    loop = asyncio.get_event_loop()
-                    transcript = await loop.run_in_executor(
-                        None,
-                        lambda: ytt_api.get_transcript(video_id)
+                print(f"✗ Attempt {attempt + 1} failed: {last_error}")
+                
+                # If this was the last attempt, raise error
+                if attempt == max_attempts - 1:
+                    raise HTTPException(
+                        status_code=500,
+                        detail=f"Failed to fetch transcript after {max_attempts} attempts. Last error: {last_error}"
                     )
-                    
-                    result = ' '.join(entry['text'] for entry in transcript)
-                    if not result.strip():
-                        raise HTTPException(
-                            status_code=404,
-                            detail="Transcript is empty or not available"
-                        )
-                    
-                    print("✅ SUCCESS: Transcript fetched using free proxy")
-                    return result
-                    
-            except HTTPException:
-                raise
-            except Exception as e:
-                last_error = str(e)
-                print(f"  ❌ Free proxy attempt {attempt + 1} failed: {last_error}")
-                if attempt < 2:
-                    await asyncio.sleep(1)
+                
+                # Wait a bit before retrying
+                await asyncio.sleep(1)
         
-        # Method 3: Try direct connection (works locally, may fail on cloud)
-        print("🔄 Method 3: Trying direct connection (no proxy)...")
-        try:
-            ytt_api = YouTubeTranscriptApi()
-            
-            loop = asyncio.get_event_loop()
-            transcript = await loop.run_in_executor(
-                None,
-                lambda: ytt_api.get_transcript(video_id)
-            )
-            
-            result = ' '.join(entry['text'] for entry in transcript)
-            if not result.strip():
-                raise HTTPException(
-                    status_code=404,
-                    detail="Transcript is empty or not available"
-                )
-            
-            print("✅ SUCCESS: Transcript fetched using direct connection")
-            return result
-            
-        except HTTPException:
-            raise
-        except Exception as e:
-            last_error = str(e)
-            print(f"❌ Direct connection failed: {last_error}")
-        
-        # All methods failed
-        error_msg = (
-            f"Failed to fetch transcript after trying all methods. "
-            f"Last error: {last_error}. "
-            f"{'Consider adding SCRAPERAPI_KEY for cloud deployment.' if not self.proxy_manager.has_scraperapi() else 'ScraperAPI may have rate limits.'}"
+        # Fallback error (should not reach here)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error fetching transcript: {last_error}"
         )
-        raise HTTPException(status_code=500, detail=error_msg)
 
     async def process_transcript(self, transcript: str) -> Dict:
         #process transcript and generate learning content matching VideoContent model
