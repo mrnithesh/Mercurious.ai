@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { 
   FaBrain, 
@@ -521,9 +522,7 @@ ${video.content.analysis}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-6">
                 <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                  <div className="p-2 bg-slate-900 rounded-lg shadow-sm">
-                    <FaBrain className="w-5 sm:w-6 h-5 sm:h-6 text-white" />
-                  </div>
+                  <Image src="/logo.png" alt="Mercurious AI Logo" width={40} height={40} className="w-9 sm:w-10 h-9 sm:h-10" />
                   <span className="text-lg sm:text-xl font-bold text-slate-900">
                     Mercurious AI
                   </span>

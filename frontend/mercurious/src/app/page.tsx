@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
   FaBrain,
   FaYoutube,
@@ -118,9 +119,7 @@ export default function Home() {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <div className="p-2 bg-slate-900 rounded-lg shadow-sm">
-                <FaBrain className="w-6 h-6 text-white" />
-              </div>
+              <Image src="/logo.png" alt="Mercurious AI Logo" width={40} height={40} className="w-10 h-10" />
               <span className="text-xl font-bold text-slate-900">
                 Mercurious AI
               </span>
@@ -519,9 +518,7 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="sm:col-span-2 lg:col-span-2">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-white rounded-lg">
-                  <FaBrain className="w-6 h-6 text-slate-900" />
-                </div>
+                <Image src="/logo.png" alt="Mercurious AI Logo" width={40} height={40} className="w-10 h-10" />
                 <span className="text-xl font-bold text-white">
                   Mercurious AI
                 </span>
