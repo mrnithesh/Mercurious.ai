@@ -13,6 +13,7 @@ from ..models.video import (
     VideoInfo, VideoContent, VideoResponse, GlobalVideo, 
     VideoMetadata, UserVideoMetadata
 )
+from ..constants import EXAMPLE_VIDEO_IDS
 load_dotenv()
 
 class VideoService:
@@ -21,6 +22,11 @@ class VideoService:
         self.retry_delay = 2
         self.supported_domains = ['youtube.com', 'youtu.be']
         self.video_db = VideoDatabase()
+    
+    @staticmethod
+    def is_example_video(video_id: str) -> bool:
+        """Check if a video ID is an example video"""
+        return video_id in EXAMPLE_VIDEO_IDS
 
     async def extract_video_id(self, url: HttpUrl) -> str:
         """Extract video ID from YouTube URL."""

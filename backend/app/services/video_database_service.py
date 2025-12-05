@@ -9,6 +9,7 @@ from ..models.video import (
     GlobalVideo, UserVideoReference, VideoLibraryItem, 
     UserVideoMetadata, VideoResponse, VideoInfo, VideoContent, VideoMetadata
 )
+from ..constants import EXAMPLE_VIDEO_IDS
 
 class VideoDatabase:
     def __init__(self):
@@ -234,7 +235,11 @@ class VideoDatabase:
             raise HTTPException(status_code=500, detail=f"Error updating video notes: {str(e)}")
     
     async def get_combined_video_response(self, user_id: str, video_id: str) -> Optional[VideoResponse]:
-        """Get combined video response (global video + user metadata)"""
+        """Get combined video response (global video + user metadata)
+        
+        For example videos or videos that exist globally but not in user's library,
+        returns VideoResponse with default user metadata to allow access.
+        """
         try:
             # Get global video
             global_video = await self.get_global_video(video_id)
@@ -243,10 +248,28 @@ class VideoDatabase:
             
             # Get user metadata
             user_metadata = await self.get_user_video_metadata(user_id, video_id)
-            if not user_metadata:
-                return None
             
-            # Combine into VideoResponse
+            # If user metadata doesn't exist, check if it's an example video
+            # or allow access with default metadata
+            if not user_metadata:
+                # Check if it's an example video - allow access with default metadata
+                if video_id in EXAMPLE_VIDEO_IDS:
+                    # Return VideoResponse with default user metadata for example videos
+                    return VideoResponse(
+                        video_id=video_id,
+                        info=global_video.info,
+                        content=global_video.content,
+                        progress=0.0,
+                        created_at=global_video.metadata.created_at,
+                        last_watched=None,
+                        is_favorite=False,
+                        notes=""
+                    )
+                else:
+                    # Not an example video and not in user's library - return None
+                    return None
+            
+            # Combine into VideoResponse with actual user metadata
             return VideoResponse(
                 video_id=video_id,
                 info=global_video.info,

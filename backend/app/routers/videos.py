@@ -6,6 +6,7 @@ from ..models import (
 )
 from ..services import VideoService
 from ..dependencies import get_current_user
+from ..constants import EXAMPLE_VIDEO_IDS
 
 app = APIRouter()
 video_service = VideoService()
@@ -40,7 +41,7 @@ async def get_user_dashboard(current_user: dict = Depends(get_current_user)):
 
 @app.get("/api/videos/{video_id}", response_model=VideoResponse)
 async def get_video(video_id: str, current_user: dict = Depends(get_current_user)):
-    """Get a specific video from user's library"""
+    """Get a specific video from user's library or allow access to example videos"""
     try:
         user_id = current_user.get("uid")
         if not user_id:
@@ -50,7 +51,20 @@ async def get_video(video_id: str, current_user: dict = Depends(get_current_user
         if not video:
             raise HTTPException(status_code=404, detail="Video not found in user's library")
         
+        # If this is an example video and not yet in user's library, add it automatically
+        if video_id in EXAMPLE_VIDEO_IDS:
+            is_in_library = await video_service.video_db.check_video_in_user_library(user_id, video_id)
+            if not is_in_library:
+                # Auto-add example video to user's library for future reference
+                await video_service.video_db.add_video_to_user_library(user_id, video_id)
+                # Update access statistics
+                await video_service.video_db.update_global_video_access(video_id)
+                # Re-fetch to get the updated response with library metadata
+                video = await video_service.get_user_video(user_id, video_id)
+        
         return video
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
