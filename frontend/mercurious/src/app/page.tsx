@@ -275,7 +275,7 @@ export default function Home() {
                 {/* Small badge - less perfect */}
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-md mb-6 text-xs font-medium text-blue-700">
                   <span>✨</span>
-                  <span>Built with Google Gemini</span>
+                  <span>Powered by Google Gemini</span>
                 </div>
 
                 {/* Main Heading - More human feel */}
@@ -304,7 +304,15 @@ export default function Home() {
                     <MdVideoLibrary className="w-5 h-5" />
                     Try it free
                   </Link>
-                  <button className="inline-flex items-center justify-center gap-2 px-6 py-3.5 border border-slate-300 hover:border-slate-400 text-slate-700 hover:text-slate-900 font-medium rounded-lg transition-colors text-base bg-white">
+                  <button
+                    onClick={() => {
+                      const element = document.getElementById('how-it-works');
+                      if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }
+                    }}
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 border border-slate-300 hover:border-slate-400 text-slate-700 hover:text-slate-900 font-medium rounded-lg transition-colors text-base bg-white"
+                  >
                     See how it works
                   </button>
                 </div>
@@ -425,7 +433,7 @@ export default function Home() {
       </section>
 
       {/* How It Works */}
-      <section className="py-16 sm:py-20 lg:py-24 bg-white">
+      <section id="how-it-works" className="py-16 sm:py-20 lg:py-24 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header - Right aligned for variation */}
           <div className="mb-12 lg:mb-16 max-w-2xl ml-auto text-right lg:text-left">
